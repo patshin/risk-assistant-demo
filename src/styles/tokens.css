@@ -1,0 +1,28 @@
+:root {
+  color-scheme: light;
+  --color-bg: #fff7ec;
+  --color-bg-soft: #fdf7ef;
+  --color-surface: #ffffff;
+  --color-surface-warm: #fffcf7;
+  --color-orange: #ff6a00;
+  --color-orange-strong: #f97316;
+  --color-orange-soft: #ffe8d2;
+  --color-orange-softer: #fff0de;
+  --color-text: #1f1b16;
+  --color-text-soft: #7a7168;
+  --color-text-muted: #9a8f84;
+  --color-border: #f3e3d1;
+  --color-success: #719a4a;
+  --color-warning: #d58a16;
+  --color-danger: #e85c23;
+  --shadow-soft: 0 18px 48px rgba(150, 92, 34, 0.12);
+  --shadow-card: 0 12px 32px rgba(116, 72, 26, 0.1);
+  --shadow-float: 0 20px 54px rgba(73, 45, 16, 0.18);
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-lg: 26px;
+  --radius-xl: 32px;
+  --space-page: 20px;
+  --font-display: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
