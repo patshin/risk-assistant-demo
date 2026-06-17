@@ -18,7 +18,7 @@ import {
   Target,
   UsersRound,
 } from "lucide-react";
-import { PageHeader } from "../components";
+import { PageHeader, useCopilot } from "../components";
 
 const reportBullets = [
   "地产链条风险升温，部分区域回款放缓，风险敞口上升，需严控资金敞口。",
@@ -47,6 +47,7 @@ const evidenceItems = [
 
 export function ReportPage() {
   const navigate = useNavigate();
+  const { openCopilot } = useCopilot();
 
   return (
     <div className="page report-page">
@@ -170,7 +171,7 @@ export function ReportPage() {
           <Download size={18} />
           导出PPT/PDF
         </button>
-        <button className="ghost-button" type="button">
+        <button className="ghost-button" type="button" onClick={() => openCopilot({ context: "正在基于领导汇报继续追问" })}>
           <MessageCircle size={18} />
           继续追问
         </button>

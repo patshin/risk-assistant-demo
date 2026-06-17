@@ -15,9 +15,10 @@ import {
   ShieldCheck,
   Sparkles,
   TrendingDown,
+  TrendingUp,
   WalletCards,
 } from "lucide-react";
-import { BottomAskBar, DonutChart, MiniLineChart, PageHeader, PillTag, TabBar } from "../components";
+import { BottomAskBar, DonutChart, MiniLineChart, PageHeader, PillTag, TabBar, useCopilot } from "../components";
 
 const tabs = [
   { key: "overview", label: "组合概览" },
@@ -32,6 +33,12 @@ const contributionItems = [
   { label: "利率债", value: "15%", color: "#9bc39a" },
   { label: "现金及其他", value: "15%", color: "#f5c75f" },
 ];
+
+const overviewSegments = contributionItems.map((item) => ({
+  label: item.label,
+  value: Number.parseFloat(item.value),
+  color: item.color,
+}));
 
 const stressScenarios = [
   { title: "利率上行 50bp", desc: "利率上升冲击组合估值", icon: BarChart3 },
@@ -61,6 +68,25 @@ const factorItems = [
   { title: "流动性风险", desc: "低流动性资产在压力情景下处置成本上升", value: "8%", tone: "yellow", icon: WalletCards, data: [8, 9, 7, 10, 9, 11, 10] },
 ];
 
+const factorLinkRows = [
+  {
+    items: [
+      "利率上行",
+      "长久期债券\n估值承压",
+      "组合波动\n上升",
+    ],
+    connectors: ["arrow", "arrow"] as const,
+  },
+  {
+    items: [
+      "权益回调",
+      "信用利差\n走阔",
+      "风险资产\n同步承压",
+    ],
+    connectors: ["plus", "arrow"] as const,
+  },
+];
+
 const allocationItems = [
   { label: "利率债", value: "35%", color: "#ff6a00" },
   { label: "信用债", value: "26%", color: "#5d9aaa" },
@@ -68,6 +94,12 @@ const allocationItems = [
   { label: "现金及其他", value: "12%", color: "#f5c75f" },
   { label: "另类投资", value: "9%", color: "#aaa1d8" },
 ];
+
+const allocationSegments = allocationItems.map((item) => ({
+  label: item.label,
+  value: Number.parseFloat(item.value),
+  color: item.color,
+}));
 
 const allocationVsRisk = [
   { label: "利率债", allocation: "35%", risk: "22%", allocationWidth: "72%", riskWidth: "48%" },
@@ -85,6 +117,7 @@ const observations = [
 
 export function InvestmentRiskPage() {
   const navigate = useNavigate();
+  const { openCopilot } = useCopilot();
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
@@ -109,7 +142,7 @@ export function InvestmentRiskPage() {
         {activeTab === "allocation" ? <AllocationTab /> : null}
       </div>
 
-      <BottomAskBar onOpen={() => undefined} />
+      <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“投资组合风险与资产配置”" })} />
     </div>
   );
 }
@@ -140,7 +173,7 @@ function OverviewTab() {
       <section className="investment-card glass-card">
         <h2>风险贡献（按资产类别）</h2>
         <div className="contribution-layout">
-          <DonutChart value={67} label="风险贡献分布" size={148} />
+          <DonutChart value={67} label="风险贡献分布" size={148} centerText="风险分布" segments={overviewSegments} />
           <LegendList items={contributionItems} />
         </div>
       </section>
@@ -169,9 +202,13 @@ function StressTab() {
         <div className="scenario-grid">
           {stressScenarios.map((scenario) => (
             <article className={scenario.active ? "is-active" : ""} key={scenario.title}>
-              <scenario.icon size={24} />
-              <strong>{scenario.title}</strong>
-              <p>{scenario.desc}</p>
+              <span className="scenario-grid__icon" aria-hidden="true">
+                <scenario.icon size={20} />
+              </span>
+              <div className="scenario-grid__body">
+                <strong>{scenario.title}</strong>
+                <p>{scenario.desc}</p>
+              </div>
             </article>
           ))}
         </div>
@@ -260,18 +297,20 @@ function FactorTab() {
       <section className="investment-card glass-card">
         <h2>因子联动解读</h2>
         <div className="factor-linkage">
-          <span>利率上行</span>
-          <ChevronRight size={18} />
-          <span>权益回调</span>
-          <ChevronRight size={18} />
-          <span>信用利差走阔</span>
-          <ChevronRight size={18} />
-          <span>组合波动上升</span>
+          {factorLinkRows.map((row) => (
+            <div className="factor-linkage__row" key={row.items[0]}>
+              <FactorLinkTile label={row.items[0]} />
+              <FactorLinkConnector type={row.connectors[0]} />
+              <FactorLinkTile label={row.items[1]} />
+              <FactorLinkConnector type={row.connectors[1]} />
+              <FactorLinkTile label={row.items[2]} />
+            </div>
+          ))}
         </div>
       </section>
 
       <AIAdvice action="查看因子点评">
-        当前风险并非单一市场冲击，而是利率与权益双重敏感。若收益率继续上行，长期利率债与权益成长板块将承压。
+        当前风险并非单一市场冲击，而是利率与权益双重敏感。若收益率继续上行，长期利率债与权益成长板块将承压。建议适度缩短久期，并关注高波动权益敞口。
       </AIAdvice>
     </>
   );
@@ -297,7 +336,7 @@ function AllocationTab() {
       <section className="investment-card glass-card">
         <h2>资产类别配置</h2>
         <div className="contribution-layout">
-          <DonutChart value={74} label="资产分布" size={148} />
+          <DonutChart value={74} label="资产分布" size={148} centerText="74%" segments={allocationSegments} />
           <LegendList items={allocationItems} />
         </div>
       </section>
@@ -398,6 +437,9 @@ function StructureBar({ title, labels, alt }: { title: string; labels: string[];
 }
 
 function AIAdvice({ children, action }: { children: string; action: string }) {
+  const { openCopilot } = useCopilot();
+  const intent = action.includes("压力") ? "pressure" : action.includes("配置") ? "action" : "general";
+
   return (
     <section className="investment-ai-card glass-card">
       <h2>
@@ -405,11 +447,27 @@ function AIAdvice({ children, action }: { children: string; action: string }) {
         AI 建议
       </h2>
       <p>{children}</p>
-      <button className="ghost-button" type="button">
+      <button className="ghost-button" type="button" onClick={() => openCopilot({ intent, context: `正在分析“${action}”` })}>
         {action}
         <ChevronRight size={17} />
       </button>
     </section>
+  );
+}
+
+function FactorLinkTile({ label }: { label: string }) {
+  return (
+    <article className="factor-linkage__tile">
+      <strong>{label}</strong>
+    </article>
+  );
+}
+
+function FactorLinkConnector({ type }: { type: "arrow" | "plus" }) {
+  return (
+    <div className={`factor-linkage__connector factor-linkage__connector--${type}`} aria-hidden="true">
+      {type === "plus" ? "+" : "→"}
+    </div>
   );
 }
 

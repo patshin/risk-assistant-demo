@@ -1,30 +1,11 @@
-import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Menu, MessageCircleMore } from "lucide-react";
-import { BottomAskBar, BottomSheet, MiniLineChart, RiskCard } from "../components";
-import { entryIcon, homeEntries, reminders, type HomeEntry } from "../data/mockRisk";
-
-type SheetState =
-  | { type: "assistant" }
-  | { type: "entry"; entry: HomeEntry }
-  | null;
+import { BottomAskBar, MiniLineChart, RiskCard, useCopilot } from "../components";
+import { entryIcon, homeEntries, reminders } from "../data/mockRisk";
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [sheet, setSheet] = useState<SheetState>(null);
-
-  const sheetTitle = useMemo(() => {
-    if (!sheet) {
-      return "";
-    }
-    if (sheet.type === "assistant") {
-      return "基于首页继续追问";
-    }
-    if (sheet.type === "entry") {
-      return sheet.entry.title;
-    }
-    return "";
-  }, [sheet]);
+  const { openCopilot } = useCopilot();
 
   return (
     <div className="page">
@@ -80,7 +61,7 @@ export function HomePage() {
                       ? navigate("/investment")
                       : entry.key === "watch"
                         ? navigate("/watch")
-                        : setSheet({ type: "entry", entry })
+                        : openCopilot({ context: `正在分析“${entry.title}”` })
               }
             />
           ))}
@@ -107,11 +88,7 @@ export function HomePage() {
         </section>
       </div>
 
-      <BottomAskBar onOpen={() => setSheet({ type: "assistant" })} />
-      <BottomSheet open={sheet !== null} title={sheetTitle} onClose={() => setSheet(null)}>
-        {sheet?.type === "assistant" ? <AssistantSheet /> : null}
-        {sheet?.type === "entry" ? <EntrySheet entry={sheet.entry} /> : null}
-      </BottomSheet>
+      <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“首页风险总览与主动提醒”" })} />
     </div>
   );
 }
@@ -128,44 +105,6 @@ function StatusBar() {
         </span>
         <span>Wi-Fi</span>
         <span className="battery" />
-      </div>
-    </div>
-  );
-}
-
-function AssistantSheet() {
-  return (
-    <div className="assistant-sheet">
-      <div className="assistant-prompt">
-        <p>我会结合首页的今日简报、四类风险入口和主动提醒回答。可以让我生成汇报、解释风险来源，或把某个信号加入跟踪。</p>
-      </div>
-      <div className="quick-asks">
-        <button type="button">生成今天的领导汇报</button>
-        <button type="button">解释地产链条风险</button>
-        <button type="button">把债市久期风险加入跟踪</button>
-      </div>
-      <div className="sheet-note">
-        <h3>上下文</h3>
-        <p>当前页面：AI 智能风控助手首页。已识别 3 条主动提醒，近期看点待处理 5 项。</p>
-      </div>
-    </div>
-  );
-}
-
-function EntrySheet({ entry }: { entry: HomeEntry }) {
-  return (
-    <div className="assistant-sheet">
-      <div className="assistant-prompt">
-        <p>{entry.title}当前{entry.metaLabel ?? "风险温度"}为{entry.temperatureLabel}。AI 建议先查看上升项，再判断是否需要生成专项说明或加入重点跟踪。</p>
-      </div>
-      <div className="quick-asks">
-        <button type="button">查看影响对象</button>
-        <button type="button">生成处置建议</button>
-        <button type="button">继续追问</button>
-      </div>
-      <div className="sheet-note">
-        <h3>覆盖范围</h3>
-        <p>{entry.subtitle.replace("\n", "，")}。后续页面会展开为独立风险工作区。</p>
       </div>
     </div>
   );

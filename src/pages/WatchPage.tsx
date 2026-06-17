@@ -14,11 +14,12 @@ import {
   MessageCircle,
   Megaphone,
   PieChart,
+  RadioTower,
   ShieldCheck,
   Sparkles,
   TrendingUp,
 } from "lucide-react";
-import { BottomAskBar, PageHeader, PillTag } from "../components";
+import { BottomAskBar, PageHeader, PillTag, useCopilot } from "../components";
 
 const todayItems = [
   {
@@ -137,6 +138,7 @@ const trackingFilters = ["全部", "升温中", "观察中", "趋稳", "宏观",
 
 export function WatchPage() {
   const navigate = useNavigate();
+  const { openCopilot } = useCopilot();
 
   return (
     <div className="page watch-page">
@@ -147,7 +149,11 @@ export function WatchPage() {
         <AISummary
           title="AI 今日总览"
           body="今日新增 3 条重点风险，2 条建议进入本周汇报，1 条建议立即跟踪。"
-          chips={["宏观 1", "信用 1", "投资 1"]}
+          chips={[
+            { label: "宏观 1", icon: RadioTower },
+            { label: "信用 1", icon: ShieldCheck },
+            { label: "投资 1", icon: BarChart3 },
+          ]}
           action="查看简报"
         />
 
@@ -192,13 +198,14 @@ export function WatchPage() {
         </section>
       </div>
 
-      <BottomAskBar onOpen={() => undefined} />
+      <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“近期看点总览”" })} />
     </div>
   );
 }
 
 export function TodayFocusPage() {
   const navigate = useNavigate();
+  const { openCopilot } = useCopilot();
   const [filter, setFilter] = useState("全部");
 
   return (
@@ -209,7 +216,11 @@ export function TodayFocusPage() {
         <AISummary
           title="AI 今日摘要"
           body="今日重点事项集中在地产政策、债市波动与城投再融资压力，建议优先处理高优先级与信用相关事项。"
-          chips={["高优先级 2", "宏观 1", "信用 2"]}
+          chips={[
+            { label: "高优先级 2", icon: Bell },
+            { label: "宏观 1", icon: RadioTower },
+            { label: "信用 2", icon: ShieldCheck },
+          ]}
           action="生成今日简报"
         />
         <ChipRow items={todayFilters} active={filter} onChange={setFilter} />
@@ -220,13 +231,14 @@ export function TodayFocusPage() {
         </div>
         <AIActionCard items={["将高优先级事项加入本周汇报。", "同步地产链条与城投风险至重点跟踪。"]} />
       </div>
-      <BottomAskBar onOpen={() => undefined} />
+      <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“今日重点风险事项”" })} />
     </div>
   );
 }
 
 export function TrackingListPage() {
   const navigate = useNavigate();
+  const { openCopilot } = useCopilot();
   const [filter, setFilter] = useState("全部");
 
   return (
@@ -245,7 +257,11 @@ export function TrackingListPage() {
         <AISummary
           title="AI 跟踪总览"
           body="当前跟踪 6 项重点风险，其中 2 项升温、3 项观察中、1 项趋稳。建议优先关注地产链条与债市波动。"
-          chips={["升温中 2", "观察中 3", "趋稳 1"]}
+          chips={[
+            { label: "升温中 2", icon: Flame },
+            { label: "观察中 3", icon: RadioTower },
+            { label: "趋稳 1", icon: CheckCircle2 },
+          ]}
           action="生成跟踪简报"
         />
         <ChipRow items={trackingFilters} active={filter} onChange={setFilter} />
@@ -256,25 +272,40 @@ export function TrackingListPage() {
         </div>
         <AIActionCard items={["本周建议优先复核地产链条相关客户的授信与回款监控。", "同步更新债市波动与组合久期风险至本周例会材料。"]} />
       </div>
-      <BottomAskBar onOpen={() => undefined} />
+      <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“重点跟踪风险变化”" })} />
     </div>
   );
 }
 
-function AISummary({ title, body, chips, action }: { title: string; body: string; chips: string[]; action: string }) {
+function AISummary({
+  title,
+  body,
+  chips,
+  action,
+}: {
+  title: string;
+  body: string;
+  chips: Array<{ label: string; icon: typeof RadioTower }>;
+  action: string;
+}) {
+  const { openCopilot } = useCopilot();
+
   return (
     <section className="watch-ai-summary glass-card">
       <div className="watch-ai-badge">AI</div>
-      <div>
+      <div className="watch-ai-summary__content">
         <h2>{title}</h2>
         <p>{body}</p>
         <div className="watch-summary-chips">
           {chips.map((chip) => (
-            <span key={chip}>{chip}</span>
+            <span key={chip.label} className="watch-summary-chip">
+              <chip.icon size={16} strokeWidth={2.2} />
+              <span>{chip.label}</span>
+            </span>
           ))}
         </div>
       </div>
-      <button type="button">
+      <button className="watch-ai-summary__action" type="button" onClick={() => openCopilot({ intent: action.includes("跟踪") ? "tracking" : "report", context: `正在处理“${action}”` })}>
         {action}
         <ChevronRight size={16} />
       </button>
@@ -297,6 +328,8 @@ function SectionTitle({ title, action, onAction }: { title: string; action?: str
 }
 
 function TodayFocusCard({ item }: { item: (typeof todayItems)[number] }) {
+  const { openCopilot } = useCopilot();
+
   return (
     <article className="today-focus-card glass-card">
       <div className={`today-level today-level--${item.level === "高" ? "high" : "middle"}`}>{item.level}</div>
@@ -311,7 +344,7 @@ function TodayFocusCard({ item }: { item: (typeof todayItems)[number] }) {
         </p>
         <div className="watch-action-row">
           {item.actions.map((action) => (
-            <button type="button" key={action}>
+            <button type="button" key={action} onClick={() => openCopilot(getWatchActionOptions(action))}>
               {action}
               <ChevronRight size={15} />
             </button>
@@ -323,6 +356,8 @@ function TodayFocusCard({ item }: { item: (typeof todayItems)[number] }) {
 }
 
 function TrackingCard({ item }: { item: (typeof trackingItems)[number] }) {
+  const { openCopilot } = useCopilot();
+
   return (
     <article className="tracking-risk-card glass-card">
       <div className="tracking-risk-card__icon">
@@ -338,7 +373,7 @@ function TrackingCard({ item }: { item: (typeof trackingItems)[number] }) {
         <p><Flame size={14} /> 最新变化：{item.latest}</p>
         <div className="watch-action-row">
           {item.actions.map((action) => (
-            <button type="button" key={action}>
+            <button type="button" key={action} onClick={() => openCopilot(getWatchActionOptions(action))}>
               {action}
               <ChevronRight size={15} />
             </button>
@@ -363,6 +398,8 @@ function ChipRow({ items, active, onChange }: { items: string[]; active: string;
 }
 
 function AIActionCard({ items }: { items: string[] }) {
+  const { openCopilot } = useCopilot();
+
   return (
     <section className="watch-ai-actions glass-card">
       <h2>
@@ -370,7 +407,7 @@ function AIActionCard({ items }: { items: string[] }) {
         AI 建议动作
       </h2>
       {items.map((item) => (
-        <button type="button" key={item}>
+        <button type="button" key={item} onClick={() => openCopilot({ intent: "action", context: `正在处理“${item}”` })}>
           <ShieldCheck size={18} />
           <span>{item}</span>
           <ChevronRight size={17} />
@@ -378,6 +415,26 @@ function AIActionCard({ items }: { items: string[] }) {
       ))}
     </section>
   );
+}
+
+function getWatchActionOptions(action: string) {
+  if (action.includes("影响链路")) {
+    return { intent: "impact" as const };
+  }
+
+  if (action.includes("压力")) {
+    return { intent: "pressure" as const };
+  }
+
+  if (action.includes("跟踪")) {
+    return { intent: "tracking" as const };
+  }
+
+  if (action.includes("汇报") || action.includes("简报") || action.includes("点评")) {
+    return { intent: "report" as const, context: `正在生成“${action}”` };
+  }
+
+  return { context: `正在分析“${action}”` };
 }
 
 function StatusBar() {

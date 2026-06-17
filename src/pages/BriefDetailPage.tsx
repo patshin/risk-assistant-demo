@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,9 +15,7 @@ import {
   ThermometerSun,
   UsersRound,
 } from "lucide-react";
-import { BottomSheet, PageHeader, PillTag } from "../components";
-
-type SheetType = "impact" | "action" | null;
+import { PageHeader, PillTag, useCopilot } from "../components";
 
 const summaryItems = [
   "地产链条资金压力扩散，部分区域回款放缓，风险敞口上升。",
@@ -78,7 +75,7 @@ const nextSteps = [
 
 export function BriefDetailPage() {
   const navigate = useNavigate();
-  const [sheet, setSheet] = useState<SheetType>(null);
+  const { openCopilot } = useCopilot();
 
   return (
     <div className="page brief-page">
@@ -154,10 +151,14 @@ export function BriefDetailPage() {
                       key={action}
                       onClick={
                         action === "影响链路"
-                          ? () => setSheet("impact")
+                          ? () => openCopilot({ intent: "impact" })
                           : action === "处置建议"
-                            ? () => setSheet("action")
-                            : undefined
+                            ? () => openCopilot({ intent: "action" })
+                            : action === "压力影响"
+                              ? () => openCopilot({ intent: "pressure" })
+                              : action === "加入跟踪" || action === "跟踪任务"
+                                ? () => openCopilot({ intent: "tracking" })
+                                : () => openCopilot({ context: `正在分析“${action}”` })
                       }
                     >
                       {action}
@@ -217,30 +218,11 @@ export function BriefDetailPage() {
           <FileText size={18} />
           生成领导汇报
         </button>
-        <button className="ghost-button" type="button">
+        <button className="ghost-button" type="button" onClick={() => openCopilot({ context: "正在基于今日风险简报继续追问" })}>
           <MessageCircle size={18} />
           继续追问
         </button>
       </div>
-
-      <BottomSheet
-        open={sheet !== null}
-        title={
-          sheet === "impact" ? (
-            <>
-              风险传导链路 <span className="sheet-title-tag">AI推理结果</span>
-            </>
-          ) : (
-            <>
-              AI处置建议 <span className="sheet-title-tag">AI生成</span>
-            </>
-          )
-        }
-        onClose={() => setSheet(null)}
-      >
-        {sheet === "impact" ? <ImpactSheet /> : null}
-        {sheet === "action" ? <ActionSheet /> : null}
-      </BottomSheet>
     </div>
   );
 }

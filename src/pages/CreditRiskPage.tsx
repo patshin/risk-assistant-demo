@@ -12,7 +12,7 @@ import {
   Sparkles,
   UsersRound,
 } from "lucide-react";
-import { BottomAskBar, MiniLineChart, PageHeader, PillTag, TabBar } from "../components";
+import { BottomAskBar, DonutChart, MiniLineChart, PageHeader, PillTag, TabBar, useCopilot } from "../components";
 
 const tabs = [
   { key: "large", label: "大户风险" },
@@ -64,18 +64,18 @@ const concentrationExposure = [
 ];
 
 const distributionItems = [
-  { label: "地产", value: "28%" },
-  { label: "城投", value: "21%" },
-  { label: "建筑", value: "17%" },
-  { label: "制造", value: "14%" },
-  { label: "其他", value: "20%" },
+  { label: "地产", value: "28%", color: "#ff6a00" },
+  { label: "城投", value: "21%", color: "#ff8a2a" },
+  { label: "建筑", value: "17%", color: "#f5c75f" },
+  { label: "制造", value: "14%", color: "#ffc78e" },
+  { label: "其他", value: "20%", color: "#d7d2ca" },
 ];
 
 const regionItems = [
-  { label: "华东", value: "36%", width: "92%" },
-  { label: "华南", value: "23%", width: "64%" },
-  { label: "华中", value: "21%", width: "58%" },
-  { label: "华北", value: "20%", width: "52%" },
+  { label: "华东", value: "36%" },
+  { label: "华南", value: "23%" },
+  { label: "华中", value: "21%" },
+  { label: "华北", value: "20%" },
 ];
 
 const heatCards = [
@@ -97,6 +97,7 @@ const sectorChips = ["地产链", "城投", "建材", "零售", "制造", "更�
 
 export function CreditRiskPage() {
   const navigate = useNavigate();
+  const { openCopilot } = useCopilot();
   const [activeTab, setActiveTab] = useState("large");
 
   return (
@@ -120,7 +121,7 @@ export function CreditRiskPage() {
         {activeTab === "industry" ? <IndustryCreditTab /> : null}
       </div>
 
-      <BottomAskBar onOpen={() => undefined} />
+      <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“信用风险与集中度暴露”" })} />
     </div>
   );
 }
@@ -334,17 +335,38 @@ function SectionHeader({ title, action }: { title: string; action?: string }) {
   );
 }
 
-function DistributionCard({ title, items, mode }: { title: string; items: Array<{ label: string; value: string; width?: string }>; mode: "dot" | "bar" }) {
+function DistributionCard({
+  title,
+  items,
+  mode,
+}: {
+  title: string;
+  items: Array<{ label: string; value: string; color?: string }>;
+  mode: "dot" | "bar";
+}) {
+  const shouldShowDonut = mode === "dot" && title === "行业分布";
+  const segments = items.map((item) => ({
+    label: item.label,
+    value: Number.parseFloat(item.value),
+    color: item.color ?? "#ff6a00",
+  }));
+
   return (
     <article className="distribution-card glass-card">
       <h3>{title}</h3>
-      <div className={`distribution-list distribution-list--${mode}`}>
+      {shouldShowDonut ? (
+        <div className="distribution-donut-layout">
+          <DonutChart value={100} label={title} size={116} centerText="" segments={segments} />
+          <DistributionLegend items={items} />
+        </div>
+      ) : null}
+      <div className={`distribution-list distribution-list--${mode}${shouldShowDonut ? " distribution-list--hidden" : ""}`}>
         {items.map((item) => (
           <div key={item.label}>
             <span>{item.label}</span>
             {mode === "bar" ? (
               <i>
-                <b style={{ width: item.width }} />
+                <b style={{ width: item.value }} />
               </i>
             ) : null}
             <em>{item.value}</em>
@@ -352,6 +374,20 @@ function DistributionCard({ title, items, mode }: { title: string; items: Array<
         ))}
       </div>
     </article>
+  );
+}
+
+function DistributionLegend({ items }: { items: Array<{ label: string; value: string; color?: string }> }) {
+  return (
+    <div className="distribution-legend">
+      {items.map((item) => (
+        <div key={item.label}>
+          <i style={{ background: item.color }} />
+          <span>{item.label}</span>
+          <em>{item.value}</em>
+        </div>
+      ))}
+    </div>
   );
 }
 

@@ -3,6 +3,7 @@ export { AppShell } from "./AppShell";
 export { BottomAskBar } from "./BottomAskBar";
 export { BottomSheet } from "./BottomSheet";
 export { DonutChart } from "./DonutChart";
+export { GlobalCopilotProvider, useCopilot } from "./GlobalCopilot";
 export { MetricCard } from "./MetricCard";
 export { MiniLineChart } from "./MiniLineChart";
 export { PageHeader } from "./PageHeader";

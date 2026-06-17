@@ -18,7 +18,7 @@ import {
   TrendingDown,
   UsersRound,
 } from "lucide-react";
-import { BottomAskBar, MiniLineChart, PageHeader, PillTag, TabBar } from "../components";
+import { BottomAskBar, MiniLineChart, PageHeader, PillTag, TabBar, useCopilot } from "../components";
 
 const tabs = [
   { key: "cycle", label: "周期性风险" },
@@ -73,6 +73,7 @@ const marketReads = [
 
 export function MacroRiskPage() {
   const navigate = useNavigate();
+  const { openCopilot } = useCopilot();
   const [activeTab, setActiveTab] = useState("cycle");
 
   const primaryAction = activeTab === "systemic" ? "生成系统风险点评" : activeTab === "market" ? "生成市场点评" : "";
@@ -99,14 +100,14 @@ export function MacroRiskPage() {
       </div>
 
       {activeTab === "cycle" ? (
-        <BottomAskBar onOpen={() => undefined} />
+        <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“宏观周期风险与传导影响”" })} />
       ) : (
         <div className="macro-bottom-actions">
-          <button className="primary-button" type="button">
+          <button className="primary-button" type="button" onClick={() => openCopilot({ intent: "report", context: `正在生成“${primaryAction}”` })}>
             <BarChart3 size={18} />
             {primaryAction}
           </button>
-          <button className="ghost-button" type="button">
+          <button className="ghost-button" type="button" onClick={() => openCopilot({ context: "正在基于宏观风险继续追问" })}>
             <MessageCircle size={18} />
             继续追问
           </button>
