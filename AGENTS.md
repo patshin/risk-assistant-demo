@@ -18,7 +18,6 @@ This repository is a mobile WebApp demo for an AI-native risk control assistant.
 - `src/components/`: reusable UI components.
 - `src/data/`: mock data and small data helpers.
 - `src/styles/`: global CSS and design tokens.
-- `ai/`: Codex workflow memory, tasks, decisions, and burst templates.
 
 Page files should compose UI and page flow. Put reusable UI in `src/components/`. Put complex data shaping or reusable logic in `src/data/`, `src/lib/`, or another suitable shared directory if introduced.
 
@@ -42,7 +41,7 @@ Page files should compose UI and page flow. Put reusable UI in `src/components/`
 
 - Each task should do only the current goal.
 - Do not opportunistically refactor unrelated code.
-- If a task needs changes in more than 3 files, stop first and explain why, unless the user explicitly requested a multi-file workflow or documentation update.
+- If a task is likely to touch more than 5 files or change architecture, explain the scope first before editing.
 - Do not touch generated files, dependencies, build output, or unrelated assets.
 
 ## Checks
@@ -53,12 +52,12 @@ Page files should compose UI and page flow. Put reusable UI in `src/components/`
 
 ## Codex Workflow
 
-1. Read `AGENTS.md`, `ai/memory.md`, and relevant files before changing code.
+1. Read `AGENTS.md` and only the relevant source/configuration files before changing code.
 2. State the intended scope before substantial edits.
 3. Make the smallest useful change.
 4. Run relevant checks when practical.
 5. Summarize changed files, test results, and follow-up suggestions.
-6. At the end of each task, say whether `ai/memory.md`, `ai/tasks.md`, `ai/decisions.md`, or `ai/daily-log.md` should be updated.
+6. Do not create or update AI working-log documents unless the user explicitly asks.
 
 ## Do Not
 

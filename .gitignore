@@ -1,19 +1,39 @@
+# Dependencies
 node_modules/
 
+# Build outputs
 dist/
-
 build/
+coverage/
 
+# Environment files and secrets
 .env
-
 .env.*
-
 !.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.token
+*.secret
+secrets/
 
+# Logs and local caches
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+.eslintcache
+*.tsbuildinfo
 
+# System files
 .DS_Store
+Thumbs.db
 
+# Editor folders
 .vscode/
-
 .idea/
