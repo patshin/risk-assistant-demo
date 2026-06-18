@@ -7,6 +7,7 @@ import {
   CircleDollarSign,
   CircleGauge,
   Clock3,
+  Factory,
   Flame,
   Globe2,
   Landmark,
@@ -14,6 +15,7 @@ import {
   MessageCircle,
   Share2,
   ShieldAlert,
+  ShoppingBag,
   Sparkles,
   TrendingDown,
   UsersRound,
@@ -24,6 +26,7 @@ const tabs = [
   { key: "cycle", label: "周期性风险" },
   { key: "systemic", label: "系统性风险" },
   { key: "market", label: "金融市场分析" },
+  { key: "industryCredit", label: "行业信用风险" },
 ];
 
 const cycleIndicators = [
@@ -71,12 +74,29 @@ const marketReads = [
   { title: "汇率/商品", desc: "外部波动扰动加大，关注跨境及原材料敞口。", icon: Globe2 },
 ];
 
+const heatCards = [
+  { title: "房地产", level: "高风险", desc: "房企资金面趋紧，回款压力上升", icon: Building2, chart: "line" },
+  { title: "城投平台", level: "中高风险", desc: "区域融资收缩，债务滚续承压", icon: Landmark, chart: "line" },
+  { title: "建筑建材", level: "中高风险", desc: "需求偏弱，毛利承压加剧", icon: Factory, chart: "bar" },
+  { title: "商贸零售", level: "中等风险", desc: "消费复苏分化，库存压力延续", icon: ShoppingBag, chart: "bar" },
+];
+
+const industryRanks = [
+  { rank: 1, name: "房地产", score: 78, change: "↑ 9", signal: "房企债务压力上升，回款放缓" },
+  { rank: 2, name: "城投平台", score: 71, change: "↑ 6", signal: "再融资收缩，隐债化解压力" },
+  { rank: 3, name: "建筑建材", score: 65, change: "↑ 4", signal: "项目开工不足，现金流承压" },
+  { rank: 4, name: "商贸零售", score: 54, change: "↓ 2", signal: "消费分化，库存去化缓慢" },
+  { rank: 5, name: "制造业", score: 48, change: "↓ 1", signal: "需求恢复偏慢，利润承压" },
+];
+
+const sectorChips = ["地产链", "城投", "建材", "零售", "制造", "更多"];
+
 export function MacroRiskPage() {
   const navigate = useNavigate();
   const { openCopilot } = useCopilot();
   const [activeTab, setActiveTab] = useState("cycle");
 
-  const primaryAction = activeTab === "systemic" ? "生成系统风险点评" : activeTab === "market" ? "生成市场点评" : "";
+  const primaryAction = activeTab === "systemic" ? "生成系统风险点评" : activeTab === "market" ? "生成市场点评" : activeTab === "industryCredit" ? "生成行业信用点评" : "";
 
   return (
     <div className="page macro-page">
@@ -97,6 +117,7 @@ export function MacroRiskPage() {
         {activeTab === "cycle" ? <CycleRiskTab /> : null}
         {activeTab === "systemic" ? <SystemicRiskTab /> : null}
         {activeTab === "market" ? <MarketRiskTab /> : null}
+        {activeTab === "industryCredit" ? <IndustryCreditTab /> : null}
       </div>
 
       {activeTab === "cycle" ? (
@@ -261,6 +282,119 @@ function MarketRiskTab() {
 
       <ImpactObjects />
     </>
+  );
+}
+
+function IndustryCreditTab() {
+  const [sector, setSector] = useState("地产链");
+
+  return (
+    <>
+      <section className="industry-overview-card glass-card">
+        <header>
+          <h2>行业信用风险概览</h2>
+          <span>近8周趋势</span>
+        </header>
+        <div className="industry-overview-card__body">
+          <div>
+            <strong>62</strong>
+            <span>/ 100</span>
+            <PillTag variant="mediumHigh">中等偏高</PillTag>
+            <em>+6 较上周</em>
+          </div>
+          <MiniLineChart data={[42, 40, 45, 54, 46, 50, 58, 62]} />
+        </div>
+        <p><b>AI</b> 本周地产链条、建筑建材与城投相关行业信用风险有所抬升，建议关注弱资质主体与产业链传导风险。</p>
+      </section>
+
+      <section className="credit-section">
+        <h2>行业风险热度</h2>
+        <div className="heat-card-grid">
+          {heatCards.map((item) => (
+            <article className="heat-card glass-card" key={item.title}>
+              <header>
+                <item.icon size={24} />
+                <h3>{item.title}</h3>
+                <PillTag variant={item.level === "高风险" ? "high" : item.level === "中高风险" ? "mediumHigh" : "watch"}>{item.level}</PillTag>
+              </header>
+              <MiniLineChart data={item.chart === "line" ? [22, 25, 24, 28, 27, 31, 35] : [14, 18, 16, 21, 19, 25, 23]} />
+              <p>{item.desc}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="credit-section">
+        <h2>重点行业排行</h2>
+        <div className="industry-rank-list glass-card">
+          {industryRanks.map((item) => (
+            <article key={item.name}>
+              <span>{item.rank}</span>
+              <div>
+                <strong>{item.name}</strong>
+                <p>{item.signal}</p>
+              </div>
+              <em>{item.score}</em>
+              <small>{item.change}</small>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="credit-section">
+        <h2>行业风险分布</h2>
+        <DistributionCard
+          title="风险等级分布"
+          items={[
+            { label: "高风险", value: "18%" },
+            { label: "中高风险", value: "32%" },
+            { label: "中等风险", value: "30%" },
+            { label: "低风险", value: "16%" },
+            { label: "较低风险", value: "4%" },
+          ]}
+        />
+      </section>
+
+      <section className="credit-section">
+        <h2>风险变化趋势</h2>
+        <div className="industry-trend-card glass-card">
+          <MiniLineChart data={[42, 45, 44, 48, 51, 55, 58, 62]} />
+          <p>房地产、城投平台与建筑建材风险热度近 8 周持续上行，弱资质主体压力更集中。</p>
+        </div>
+      </section>
+
+      <section className="credit-ai-card glass-card">
+        <h2>
+          <Sparkles size={18} />
+          AI 洞察
+        </h2>
+        <p>当前行业信用风险并非普遍恶化，而是集中在地产链、城投平台与部分高杠杆行业。建议优先关注融资收缩与回款压力同步上升的行业。</p>
+      </section>
+
+      <div className="sector-chip-row">
+        {sectorChips.map((item) => (
+          <button className={item === sector ? "is-active" : ""} type="button" key={item} onClick={() => setSector(item)}>
+            {item}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function DistributionCard({ title, items }: { title: string; items: Array<{ label: string; value: string }> }) {
+  return (
+    <article className="distribution-card glass-card">
+      <h3>{title}</h3>
+      <div className="distribution-list distribution-list--dot">
+        {items.map((item) => (
+          <div key={item.label}>
+            <span>{item.label}</span>
+            <em>{item.value}</em>
+          </div>
+        ))}
+      </div>
+    </article>
   );
 }
 
