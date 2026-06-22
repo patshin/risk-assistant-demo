@@ -5,6 +5,7 @@ import { GlobalCopilotProvider } from "./components/GlobalCopilot";
 import { BriefDetailPage } from "./pages/BriefDetailPage";
 import { CreditRiskPage, RiskMigrationTrendPage } from "./pages/CreditRiskPage";
 import { CreditCustomerListPage } from "./pages/CreditCustomerListPage";
+import { CustomerRiskDetailPage } from "./pages/CustomerRiskDetailPage";
 import { HomePage } from "./pages/HomePage";
 import { InvestmentRiskPage } from "./pages/InvestmentRiskPage";
 import { MacroRiskPage } from "./pages/MacroRiskPage";
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/credit" element={<CreditRiskPage />} />
           <Route path="/credit/customers" element={<CreditCustomerListPage />} />
           <Route path="/risk/migration" element={<RiskMigrationTrendPage />} />
+          <Route path="/risk/customer/:id" element={<CustomerRiskDetailPage />} />
           <Route path="/investment" element={<InvestmentRiskPage />} />
           <Route path="/watch" element={<WatchPage />} />
           <Route path="/watch/alerts" element={<AlertTimelinePage />} />

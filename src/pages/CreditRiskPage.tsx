@@ -1,4 +1,4 @@
-import { useRef, useState, type MutableRefObject } from "react";
+import { useRef, useState, type MouseEvent, type MutableRefObject } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Bot,
@@ -8,9 +8,13 @@ import {
   ChevronRight,
   ClipboardList,
   FileText,
+  Gavel,
   Landmark,
+  Link2,
+  MessageCircle,
   PieChart,
   Share2,
+  ShieldAlert,
   ShieldCheck,
   Sparkles,
   TrendingUp,
@@ -18,13 +22,14 @@ import {
   UserRoundSearch,
   UsersRound,
 } from "lucide-react";
-import { BottomAskBar, DonutChart, PageHeader, PillTag, TabBar, useCopilot } from "../components";
+import { BottomAskBar, BottomSheet, DonutChart, PageHeader, PillTag, TabBar, useCopilot } from "../components";
 import {
   aiPredictedCustomers,
   concentrationRiskViews,
   creditCustomerStats,
   customerFilters,
   filterCreditCustomers,
+  getCustomerRiskProfile,
   getCustomerStatusVariant,
   migrationTrendData,
   riskFactorData,
@@ -36,6 +41,8 @@ import {
   type ConcentrationTrendPoint,
   type CreditCustomer,
   type CustomerFilter,
+  type CustomerRiskProfile,
+  type ExternalEventCounts,
   type MigrationTrendPoint,
   type RiskFactorItem,
   type SubsidiaryRiskItem,
@@ -474,6 +481,7 @@ function getReturnTo(state: unknown, fallback: string) {
 function LargeCustomerTab() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<CustomerFilter>("全部");
+  const [eventProfile, setEventProfile] = useState<CustomerRiskProfile | null>(null);
   const stats = creditCustomerStats();
   const visibleCustomers = filterCreditCustomers(filter).slice(0, 3);
 
@@ -495,7 +503,7 @@ function LargeCustomerTab() {
 
       <div className="customer-card-list">
         {visibleCustomers.map((customer) => (
-          <CustomerRiskCard customer={customer} key={customer.id} />
+          <CustomerRiskCard customer={customer} key={customer.id} onOpenEvents={setEventProfile} />
         ))}
       </div>
 
@@ -505,6 +513,7 @@ function LargeCustomerTab() {
       </button>
 
       <AIInsight>本周重点客户风险整体上升，建议关注地产、建筑、城投相关客户的现金流与债务压力。</AIInsight>
+      <CustomerEventBottomSheet profile={eventProfile} onClose={() => setEventProfile(null)} />
     </>
   );
 }
@@ -1102,12 +1111,54 @@ function getConcentrationY(value: number) {
   return 136 - value * 1.55;
 }
 
-export function CustomerRiskCard({ customer }: { customer: CreditCustomer }) {
+export function CustomerRiskCard({
+  customer,
+  onOpenEvents,
+}: {
+  customer: CreditCustomer;
+  onOpenEvents?: (profile: CustomerRiskProfile) => void;
+}) {
+  const navigate = useNavigate();
+  const profile = getCustomerRiskProfile(customer.id);
+  const eventChips = getExternalEventChips(profile.externalEvents).slice(0, 3);
+  const openDetail = () => navigate(`/risk/customer/${customer.id}`);
+  const openRating = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    navigate(`/risk/customer/${customer.id}?tab=rating`);
+  };
+  const openEvents = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (onOpenEvents) {
+      onOpenEvents(profile);
+      return;
+    }
+
+    navigate(`/risk/customer/${customer.id}?tab=events`);
+  };
+
   return (
-    <article className="customer-risk-card glass-card">
+    <article
+      className="customer-risk-card customer-risk-card--entry glass-card"
+      tabIndex={0}
+      onClick={openDetail}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openDetail();
+        }
+      }}
+    >
       <header>
+        <span className="customer-card-leading-icon" aria-hidden="true">
+          <Building2 size={18} />
+        </span>
         <h2>{customer.name}</h2>
+        <button className={`customer-rating-badge is-${getRatingTone(profile.rating)}`} type="button" onClick={openRating} aria-label={`查看${customer.name}信用评级`}>
+          {profile.rating}
+          {profile.ratingTrend === "down" ? <span>↓</span> : null}
+        </button>
         <PillTag variant={getCustomerStatusVariant(customer.riskLevel)}>{customer.riskLevel}</PillTag>
+        <ChevronRight className="customer-card-chevron" size={18} />
       </header>
       <div className="customer-score-row">
         <span>风险评分</span>
@@ -1118,6 +1169,16 @@ export function CustomerRiskCard({ customer }: { customer: CreditCustomer }) {
         <b>主要风险：</b>
         {customer.mainRisks.join("、")}
       </p>
+      {eventChips.length > 0 ? (
+        <div className="external-event-chip-row" aria-label={`${customer.name}外部事件`}>
+          {eventChips.map((chip) => (
+            <button className="external-event-chip" type="button" key={chip.key} onClick={openEvents}>
+              <chip.icon size={14} />
+              {chip.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <p>
         <b>最新动态：</b>
         {customer.latestUpdate}
@@ -1125,6 +1186,167 @@ export function CustomerRiskCard({ customer }: { customer: CreditCustomer }) {
       <small>{customer.updatedAt}</small>
     </article>
   );
+}
+
+function CustomerEventBottomSheet({
+  profile,
+  onClose,
+}: {
+  profile: CustomerRiskProfile | null;
+  onClose: () => void;
+}) {
+  const navigate = useNavigate();
+  const { openCopilot } = useCopilot();
+  const [summaryVisible, setSummaryVisible] = useState(false);
+
+  if (!profile) {
+    return null;
+  }
+
+  const chips = getSheetFilterChips(profile.externalEvents);
+
+  return (
+    <BottomSheet open title="舆情与司法事件" onClose={onClose}>
+      <div className="external-event-sheet">
+        <div className="external-event-sheet__summary">
+          <p>
+            近 7 日新增外部风险信号 <strong>{getExternalEventTotal(profile.externalEvents)}</strong> 条
+          </p>
+          <span>{profile.updatedAt}</span>
+        </div>
+        <div className="external-sheet-filter-row">
+          {chips.map((chip) => (
+            <button className={chip.key === "all" ? "is-active" : ""} type="button" key={chip.key}>
+              {chip.label}
+            </button>
+          ))}
+        </div>
+        <EventTimelinePreview profile={profile} />
+        <section className="external-event-ai-card">
+          <h3>
+            <Sparkles size={17} />
+            AI 判断
+          </h3>
+          <p>{profile.eventInsight}</p>
+        </section>
+        <div className="external-sheet-actions">
+          <button
+            className="ghost-button"
+            type="button"
+            onClick={() => {
+              onClose();
+              navigate(`/risk/customer/${profile.id}?tab=events`);
+            }}
+          >
+            <FileText size={17} />
+            查看完整事件流
+          </button>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={() => {
+              setSummaryVisible(true);
+              openCopilot({ intent: "report", context: `正在生成“${profile.name}客户风险摘要”` });
+            }}
+          >
+            <Sparkles size={17} />
+            生成客户风险摘要
+          </button>
+        </div>
+        {summaryVisible ? (
+          <p className="external-event-generated">
+            {profile.name}近 7 日外部风险信号密度上升，且与内部评级下调、现金流承压信号共振。建议暂停新增授信，排查关联担保链，并纳入一级跟踪。
+          </p>
+        ) : null}
+      </div>
+    </BottomSheet>
+  );
+}
+
+function EventTimelinePreview({ profile }: { profile: CustomerRiskProfile }) {
+  return (
+    <div className="external-event-timeline external-event-timeline--sheet">
+      {profile.eventTimeline.map((item) => (
+        <article className="external-event-item" key={`${item.time}-${item.title}`}>
+          <span className="external-event-item__icon" aria-hidden="true">
+            {getExternalEventIcon(item.type)}
+          </span>
+          <div>
+            <span className="external-event-item__time">{item.time}</span>
+            <h3>{item.title}</h3>
+            <p>{item.summary}</p>
+            <em>影响风险因子：{item.factors.join("、")}</em>
+          </div>
+          <strong>{item.type}</strong>
+          <ChevronRight size={17} />
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function getExternalEventChips(events: ExternalEventCounts) {
+  const chips = [
+    { key: "sentiment", label: `舆情 ${events.sentiment}`, count: events.sentiment, icon: MessageCircle },
+    { key: "litigation", label: `诉讼 ${events.litigation}`, count: events.litigation, icon: Gavel },
+    { key: "enforcement", label: `被执行 ${events.enforcement}`, count: events.enforcement, icon: ShieldAlert },
+    { key: "regulatory", label: `监管 ${events.regulatory ?? 0}`, count: events.regulatory ?? 0, icon: ClipboardList },
+    { key: "announcement", label: "公告风险", count: events.announcement ?? 0, icon: FileText },
+    { key: "guaranteeChain", label: "担保链", count: events.guaranteeChain ? 1 : 0, icon: Link2 },
+  ];
+
+  return chips.filter((chip) => chip.count > 0);
+}
+
+function getSheetFilterChips(events: ExternalEventCounts) {
+  return [
+    { key: "all", label: `全部 ${getExternalEventTotal(events)}` },
+    { key: "sentiment", label: `负面舆情 ${events.sentiment}` },
+    { key: "litigation", label: `诉讼 ${events.litigation}` },
+    { key: "enforcement", label: `被执行 ${events.enforcement}` },
+    { key: "regulatory", label: `监管 ${events.regulatory ?? 0}` },
+    { key: "announcement", label: `公告 ${events.announcement ?? 0}` },
+  ];
+}
+
+function getExternalEventTotal(events: ExternalEventCounts) {
+  return events.sentiment + events.litigation + events.enforcement + (events.regulatory ?? 0) + (events.announcement ?? 0);
+}
+
+function getRatingTone(rating: string) {
+  if (rating === "1D" || rating === "1C") {
+    return "critical";
+  }
+
+  if (rating === "1B") {
+    return "high";
+  }
+
+  if (rating.startsWith("2")) {
+    return "medium";
+  }
+
+  return "low";
+}
+
+function getExternalEventIcon(type: string) {
+  if (type === "诉讼") {
+    return <Gavel size={19} />;
+  }
+
+  if (type === "被执行") {
+    return <ShieldAlert size={19} />;
+  }
+
+  if (type === "公告") {
+    return <FileText size={19} />;
+  }
+
+  if (type === "监管") {
+    return <ClipboardList size={19} />;
+  }
+
+  return <MessageCircle size={19} />;
 }
 
 function SectionHeader({ title, action }: { title: string; action?: string }) {
