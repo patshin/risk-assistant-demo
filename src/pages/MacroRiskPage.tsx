@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   Building2,
@@ -93,8 +93,10 @@ const sectorChips = ["地产链", "城投", "建材", "零售", "制造", "更�
 
 export function MacroRiskPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { openCopilot } = useCopilot();
   const [activeTab, setActiveTab] = useState("cycle");
+  const backPath = getReturnTo(location.state, "/");
 
   const primaryAction = activeTab === "systemic" ? "生成系统风险点评" : activeTab === "market" ? "生成市场点评" : activeTab === "industryCredit" ? "生成行业信用点评" : "";
 
@@ -104,7 +106,7 @@ export function MacroRiskPage() {
         <StatusBar />
         <PageHeader
           title="宏观风险"
-          onBack={() => navigate("/")}
+          onBack={() => navigate(backPath)}
           action={
             <button className="icon-button" type="button" aria-label="分享">
               <Share2 size={18} />
@@ -136,6 +138,17 @@ export function MacroRiskPage() {
       )}
     </div>
   );
+}
+
+function getReturnTo(state: unknown, fallback: string) {
+  if (state && typeof state === "object" && "returnTo" in state) {
+    const returnTo = (state as { returnTo?: unknown }).returnTo;
+    if (typeof returnTo === "string") {
+      return returnTo;
+    }
+  }
+
+  return fallback;
 }
 
 function CycleRiskTab() {

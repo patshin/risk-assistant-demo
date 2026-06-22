@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BarChart3,
@@ -30,10 +30,12 @@ import {
 
 export function ClientRiskPanoramaPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const data = clientRiskPanorama;
+  const backPath = getReturnTo(location.state, "/brief");
 
   return (
-    <RiskAnalysisLayout title="客户风险全景" onBack={() => navigate("/brief")}>
+    <RiskAnalysisLayout title="客户风险全景" onBack={() => navigate(backPath)}>
       <ClientHero data={data} />
       <SegmentTabs items={["风险概览", "风险信号", "敞口信息", "关联图谱"]} />
       <section className="risk-detail-card glass-card">
@@ -117,10 +119,12 @@ export function ClientRiskPanoramaPage() {
 
 export function IndustryRiskAnalysisPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const data = industryRiskAnalysis;
+  const backPath = getReturnTo(location.state, "/brief");
 
   return (
-    <RiskAnalysisLayout title="行业风险分析" onBack={() => navigate("/brief")}>
+    <RiskAnalysisLayout title="行业风险分析" onBack={() => navigate(backPath)}>
       <HeaderHero title={data.name} badge={data.badge} updateTime={data.updateTime} />
       <SegmentTabs items={["风险概览", "重点客户", "区域分布", "关联路径"]} />
 
@@ -187,10 +191,12 @@ export function IndustryRiskAnalysisPage() {
 
 export function MarketShockAnalysisPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const data = marketShockAnalysis;
+  const backPath = getReturnTo(location.state, "/brief");
 
   return (
-    <RiskAnalysisLayout title="风险冲击分析" onBack={() => navigate("/brief")}>
+    <RiskAnalysisLayout title="风险冲击分析" onBack={() => navigate(backPath)}>
       <HeaderHero title={data.title} updateTime={data.updateTime} />
       <SegmentTabs items={["市场概览", "VaR维度", "影响资产", "传导分析"]} />
 
@@ -284,6 +290,17 @@ function ClientHero({ data }: { data: ClientRiskPanorama }) {
       </div>
     </section>
   );
+}
+
+function getReturnTo(state: unknown, fallback: string) {
+  if (state && typeof state === "object" && "returnTo" in state) {
+    const returnTo = (state as { returnTo?: unknown }).returnTo;
+    if (typeof returnTo === "string") {
+      return returnTo;
+    }
+  }
+
+  return fallback;
 }
 
 function HeaderHero({ title, badge, updateTime }: { title: string; badge?: string; updateTime: string }) {

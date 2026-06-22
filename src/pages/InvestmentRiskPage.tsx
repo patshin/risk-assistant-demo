@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -117,8 +117,10 @@ const observations = [
 
 export function InvestmentRiskPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { openCopilot } = useCopilot();
   const [activeTab, setActiveTab] = useState("overview");
+  const backPath = getReturnTo(location.state, "/");
 
   return (
     <div className="page investment-page">
@@ -126,7 +128,7 @@ export function InvestmentRiskPage() {
         <StatusBar />
         <PageHeader
           title="投资风险"
-          onBack={() => navigate("/")}
+          onBack={() => navigate(backPath)}
           action={
             <button className="icon-button" type="button" aria-label="分享">
               <Share2 size={18} />
@@ -145,6 +147,17 @@ export function InvestmentRiskPage() {
       <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“投资组合风险与资产配置”" })} />
     </div>
   );
+}
+
+function getReturnTo(state: unknown, fallback: string) {
+  if (state && typeof state === "object" && "returnTo" in state) {
+    const returnTo = (state as { returnTo?: unknown }).returnTo;
+    if (typeof returnTo === "string") {
+      return returnTo;
+    }
+  }
+
+  return fallback;
 }
 
 function OverviewTab() {

@@ -1,4 +1,4 @@
-import { Mic, Plus } from "lucide-react";
+import { Bot, Mic, Plus } from "lucide-react";
 
 type BottomAskBarProps = {
   onOpen: () => void;
@@ -9,6 +9,9 @@ export function BottomAskBar({ onOpen, placeholder = "问风险、生成报告�
   return (
     <div className="bottom-ask">
       <button className="bottom-ask__input" type="button" onClick={onOpen}>
+        <span className="bottom-ask__bot" aria-hidden="true">
+          <Bot size={18} />
+        </span>
         <span>{placeholder}</span>
         <Mic size={20} />
       </button>

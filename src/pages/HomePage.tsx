@@ -1,14 +1,31 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Menu, MessageCircleMore } from "lucide-react";
 import { BottomAskBar, MiniLineChart, RiskCard, useCopilot } from "../components";
-import { entryIcon, homeEntries, reminders } from "../data/mockRisk";
+import { aiAlertTickerItems, entryIcon, homeEntries } from "../data/mockRisk";
+
+const visibleAlertCount = 3;
+const alertTickerIntervalMs = 5000;
 
 export function HomePage() {
   const navigate = useNavigate();
   const { openCopilot } = useCopilot();
+  const [activeAlertGroup, setActiveAlertGroup] = useState(0);
+  const activeAlertIndex = (activeAlertGroup * visibleAlertCount) % aiAlertTickerItems.length;
+  const visibleAlerts = Array.from({ length: visibleAlertCount }, (_, offset) => aiAlertTickerItems[(activeAlertIndex + offset) % aiAlertTickerItems.length]);
+
+  useEffect(() => {
+    const ticker = window.setInterval(() => {
+      setActiveAlertGroup((current) => current + 1);
+    }, alertTickerIntervalMs);
+
+    return () => window.clearInterval(ticker);
+  }, []);
+
+  const openReminderTimeline = () => navigate("/risk/ai-alerts");
 
   return (
-    <div className="page">
+    <div className="page home-page">
       <div className="page-scroll">
         <StatusBar />
 
@@ -28,7 +45,7 @@ export function HomePage() {
               <span />
             </div>
           </div>
-          <h1>早上好，张总</h1>
+          <h1>早上好，郭总</h1>
           <p>我是您的智能风控助手</p>
         </section>
 
@@ -49,7 +66,7 @@ export function HomePage() {
               title={entry.title}
               subtitle={entry.subtitle}
               temperatureLabel={entry.temperatureLabel}
-              metaLabel={entry.metaLabel}
+              metaLabel={entry.key === "macro" || entry.key === "credit" || entry.key === "investment" ? null : entry.metaLabel}
               tagVariant={entry.tagVariant}
               visual={entry.visualType === "line" ? <MiniLineChart data={[12, 20, 17, 31, 28, 44]} /> : entryIcon(entry.visualType)}
               onClick={() =>
@@ -67,24 +84,42 @@ export function HomePage() {
           ))}
         </section>
 
-        <section className="reminder-card glass-card">
+        <section
+          className="reminder-card reminder-ticker-card glass-card"
+          aria-label="AI 主动提醒"
+          onClick={openReminderTimeline}
+        >
           <div className="reminder-card__head">
             <h2>AI 主动提醒</h2>
-            <ChevronRight size={22} />
+            <button
+              className="reminder-ticker-card__arrow"
+              type="button"
+              aria-label="进入 AI 主动提醒时间轴"
+              onClick={(event) => {
+                event.stopPropagation();
+                openReminderTimeline();
+              }}
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
-          <ul className="reminder-list">
-            {reminders.map((reminder) => (
-              <li key={reminder.id}>
-                <div className="reminder-list__row">
-                  <i aria-hidden="true" />
-                  <span>
-                    {reminder.title}
-                    {reminder.badge ? <b className="pill-tag pill-tag--warming">{reminder.badge}</b> : null}
-                  </span>
-                </div>
-              </li>
+          <div className="reminder-ticker-stack" aria-live="polite" key={activeAlertIndex}>
+            {visibleAlerts.map((alert, index) => (
+              <button
+                className={`reminder-ticker-row${index === 0 ? " is-leading" : ""}`}
+                type="button"
+                key={`${activeAlertIndex}-${alert.id}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openReminderTimeline();
+                }}
+              >
+                <i aria-hidden="true" />
+                <span>{alert.title}</span>
+                {alert.isHot ? <b>热</b> : null}
+              </button>
             ))}
-          </ul>
+          </div>
         </section>
       </div>
 

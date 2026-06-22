@@ -9,7 +9,7 @@ type MetricCardProps = {
 
 export function MetricCard({ label, value, trend, children }: MetricCardProps) {
   return (
-    <article className="metric-card glass-card">
+    <article className="metric-card surface-card glass-card">
       <p>{label}</p>
       <strong>{value}</strong>
       {trend ? <span>{trend}</span> : null}

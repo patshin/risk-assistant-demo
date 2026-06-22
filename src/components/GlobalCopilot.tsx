@@ -33,7 +33,7 @@ const routeContext: Record<string, string> = {
   "/macro": "正在分析“宏观风险传导与市场扰动”",
   "/credit": "正在分析“信用集中度与重点客户风险”",
   "/investment": "正在分析“投资组合风险与压力情景”",
-  "/watch": "正在分析“近期看点与待跟踪事项”",
+  "/watch": "正在分析“个人工作台与待跟踪事项”",
   "/watch/today": "正在分析“今日重点风险事项”",
   "/watch/tracking": "正在分析“重点跟踪风险变化”",
   "/report": "正在分析“领导汇报内容与证据支撑”",

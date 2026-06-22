@@ -8,5 +8,5 @@ type PillTagProps = {
 };
 
 export function PillTag({ variant = "neutral", children }: PillTagProps) {
-  return <span className={`pill-tag pill-tag--${variant}`}>{children}</span>;
+  return <span className={`pill-tag status-badge risk-badge pill-tag--${variant}`}>{children}</span>;
 }

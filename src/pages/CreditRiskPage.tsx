@@ -1,15 +1,20 @@
 import { useRef, useState, type MutableRefObject } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Bot,
   Building2,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ClipboardList,
   FileText,
   Landmark,
+  PieChart,
   Share2,
+  ShieldCheck,
   Sparkles,
+  TrendingUp,
+  Umbrella,
   UserRoundSearch,
   UsersRound,
 } from "lucide-react";
@@ -43,12 +48,107 @@ const tabs = [
 ];
 
 const concentrationDims: ConcentrationDimension[] = ["客户", "行业", "区域"];
+const migrationViewTabs = [
+  { key: "overall", label: "总体趋势" },
+  { key: "subsidiary", label: "子公司视图" },
+  { key: "driver", label: "风险驱动" },
+] as const;
+
+type MigrationViewTab = (typeof migrationViewTabs)[number]["key"];
+
+const subsidiaryMigrationCards = [
+  {
+    name: "平安银行",
+    tag: "风险上升",
+    status: "rise",
+    change: "+3",
+    warning: "215",
+    defaulted: "48",
+    desc: "对公地产链和城投客户风险迁移加快，需关注现金流和再融资压力。",
+    icon: Landmark,
+  },
+  {
+    name: "平安产险",
+    tag: "风险上升",
+    status: "rise",
+    change: "+2",
+    warning: "142",
+    defaulted: "23",
+    desc: "工程类客户赔付与回款压力上升，风险迁移加快。",
+    icon: Umbrella,
+  },
+  {
+    name: "平安资管",
+    tag: "风险上升",
+    status: "riseGreen",
+    change: "+1",
+    warning: "67",
+    defaulted: "10",
+    desc: "部分非标资产风险抬头，需加强底层资产穿透监控。",
+    icon: PieChart,
+  },
+  {
+    name: "平安寿险",
+    tag: "保持稳定",
+    status: "stable",
+    change: "0",
+    warning: "86",
+    defaulted: "8",
+    desc: "风险迁移保持平稳，整体风险可控。",
+    icon: ShieldCheck,
+  },
+] as const;
+
+const riskMigrationDrivers = [
+  {
+    name: "宏观周期",
+    desc: "经济下行压力加大",
+    score: "+2.1",
+    level: 88,
+    tone: "orange",
+    icon: TrendingUp,
+  },
+  {
+    name: "债市波动",
+    desc: "利率上行，信用利差走阔",
+    score: "+1.8",
+    level: 78,
+    tone: "orange",
+    icon: Landmark,
+  },
+  {
+    name: "信用事件",
+    desc: "违约/展期事件增加",
+    score: "+1.3",
+    level: 60,
+    tone: "orange",
+    icon: ShieldCheck,
+  },
+  {
+    name: "舆情研报",
+    desc: "负面舆情及不利研报增多",
+    score: "+0.8",
+    level: 34,
+    tone: "orange",
+    icon: FileText,
+  },
+  {
+    name: "政策监管",
+    desc: "监管趋严，政策收紧",
+    score: "+0.3",
+    level: 12,
+    tone: "green",
+    icon: ClipboardList,
+  },
+] as const;
 
 export function CreditRiskPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { openCopilot } = useCopilot();
   const [activeTab, setActiveTab] = useState("large");
   const predictedSectionRef = useRef<HTMLElement | null>(null);
+  const backPath = getReturnTo(location.state, "/");
 
   const scrollToPredictedCustomers = () => {
     predictedSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -60,7 +160,7 @@ export function CreditRiskPage() {
         <StatusBar />
         <PageHeader
           title="信用风险"
-          onBack={() => navigate("/")}
+          onBack={() => navigate(backPath)}
           action={
             <button className="icon-button" type="button" aria-label="分享">
               <Share2 size={18} />
@@ -81,6 +181,294 @@ export function CreditRiskPage() {
       />
     </div>
   );
+}
+
+export function RiskMigrationTrendPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { openCopilot } = useCopilot();
+  const [activeView, setActiveView] = useState<MigrationViewTab>("driver");
+  const backPath = getReturnTo(location.state, "/brief");
+
+  return (
+    <div className="page risk-migration-page">
+      <div className="page-scroll risk-migration-screen">
+        <StatusBar />
+        <PageHeader
+          title="风险迁移趋势"
+          onBack={() => navigate(backPath)}
+          action={
+            <button className="icon-button" type="button" aria-label="分享">
+              <Share2 size={18} />
+            </button>
+          }
+        />
+
+        <div className="migration-view-tabs" role="tablist" aria-label="风险迁移趋势视图">
+          {migrationViewTabs.map((item) => (
+            <button
+              className={activeView === item.key ? "is-active" : ""}
+              type="button"
+              role="tab"
+              aria-selected={activeView === item.key}
+              key={item.key}
+              onClick={() => setActiveView(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {activeView === "overall" ? <MigrationOverallView /> : null}
+        {activeView === "subsidiary" ? <MigrationSubsidiaryView /> : null}
+        {activeView === "driver" ? <MigrationDriverView /> : null}
+      </div>
+
+      <BottomAskBar
+        onOpen={() =>
+          openCopilot({
+            context:
+              activeView === "driver"
+                ? "正在分析“风险迁移趋势风险驱动”"
+                : activeView === "subsidiary"
+                  ? "正在分析“风险迁移趋势子公司视图”"
+                  : "正在分析“风险迁移趋势总体变化”",
+          })
+        }
+      />
+    </div>
+  );
+}
+
+function MigrationOverallView() {
+  return (
+    <>
+        <section className="migration-overview-card migration-brief-card glass-card">
+          <div className="migration-card-title">
+            <span>
+              <Sparkles size={19} />
+            </span>
+            <h2>AI 风险迁移简报</h2>
+          </div>
+          <div className="migration-brief-card__body">
+            <p>
+              本月集团信用风险迁移加快，正常转预警客户 <strong>18</strong> 家，预警转出险客户 <strong>5</strong> 家。主要集中在地产链、城投平台和建筑工程客户。
+            </p>
+            <div className="migration-brief-illus" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <TrendingUp size={54} />
+            </div>
+          </div>
+        </section>
+
+        <section className="migration-overview-card migration-funnel-card glass-card">
+          <h2>风险迁移漏斗（本月）</h2>
+          <div className="migration-funnel-layout">
+            <div className="migration-funnel" aria-label="本月风险迁移漏斗">
+              <div className="migration-funnel__level migration-funnel__level--normal">
+                <span>正常</span>
+                <strong>3,652<em>家</em></strong>
+              </div>
+              <div className="migration-funnel__level migration-funnel__level--warning">
+                <span>预警</span>
+                <strong>632<em>家</em></strong>
+              </div>
+              <div className="migration-funnel__level migration-funnel__level--default">
+                <span>出险</span>
+                <strong>152<em>家</em></strong>
+              </div>
+            </div>
+            <div className="migration-change-panel" aria-label="迁移变化">
+              <h3>迁移变化（较上月）</h3>
+              <p>
+                正常 → 预警
+                <strong>18<em>家</em></strong>
+                <span>↑</span>
+              </p>
+              <p>
+                预警 → 出险
+                <strong>5<em>家</em></strong>
+                <span>↑</span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="migration-overview-card migration-insight-card glass-card">
+          <div className="migration-card-title">
+            <span>
+              <Sparkles size={19} />
+            </span>
+            <h2>AI 关键洞察</h2>
+          </div>
+          <ul>
+            <li>
+              <CheckCircle2 size={18} />
+              <p>
+                正常转预警客户 <strong>18</strong> 家，预警转出险客户 <strong>5</strong> 家，风险迁移速度加快。
+              </p>
+            </li>
+            <li>
+              <CheckCircle2 size={18} />
+              <p>风险主要集中在地产链、城投平台和建筑工程客户。</p>
+            </li>
+            <li>
+              <CheckCircle2 size={18} />
+              <p>建议加强重点客户现金流监控，防范预警客户向出险迁移。</p>
+            </li>
+          </ul>
+        </section>
+    </>
+  );
+}
+
+function MigrationSubsidiaryView() {
+  return (
+    <>
+      <section className="migration-overview-card migration-brief-card migration-subsidiary-brief glass-card">
+        <div className="migration-card-title">
+          <span>
+            <Building2 size={19} />
+          </span>
+          <h2>AI 子公司风险摘要</h2>
+        </div>
+        <div className="migration-brief-card__body">
+          <p>
+            本月共有 <strong>3</strong> 家子公司风险上升，主要集中在平安银行、平安产险和平安资管，需重点关注相关客户风险迁移情况。
+          </p>
+          <div className="migration-brief-illus migration-subsidiary-illus" aria-hidden="true">
+            <Building2 size={46} />
+            <TrendingUp size={50} />
+          </div>
+        </div>
+      </section>
+
+      <section className="migration-overview-card migration-subsidiary-section glass-card">
+        <header>
+          <h2>子公司风险变化（本月）</h2>
+          <span>按风险上升排序 <ChevronDown size={15} /></span>
+        </header>
+        <div className="migration-subsidiary-list">
+          {subsidiaryMigrationCards.map((item) => (
+            <button className={`migration-subsidiary-card is-${item.status}`} type="button" key={item.name}>
+              <span className="migration-subsidiary-card__icon">
+                <item.icon size={25} />
+              </span>
+              <span className="migration-subsidiary-card__body">
+                <span className="migration-subsidiary-card__head">
+                  <strong>{item.name}</strong>
+                  <em>{item.tag}</em>
+                </span>
+                <span className="migration-subsidiary-card__stats">
+                  <span>
+                    <small>预警客户</small>
+                    <b>{item.warning}<em>家</em></b>
+                  </span>
+                  <i />
+                  <span>
+                    <small>出险客户</small>
+                    <b>{item.defaulted}<em>家</em></b>
+                  </span>
+                </span>
+              </span>
+              <span className="migration-subsidiary-card__desc">{item.desc}</span>
+              <span className="migration-subsidiary-card__change">
+                <b>{item.change}</b>
+                {item.status === "stable" ? null : <i>↑</i>}
+                <ChevronRight size={20} />
+              </span>
+              <span className="migration-subsidiary-card__watermark" aria-hidden="true">
+                <item.icon size={42} />
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function MigrationDriverView() {
+  return (
+    <>
+      <section className="migration-overview-card migration-brief-card migration-driver-brief glass-card">
+        <div className="migration-card-title">
+          <span>
+            <Sparkles size={19} />
+          </span>
+          <h2>AI 风险驱动解读</h2>
+        </div>
+        <div className="migration-brief-card__body">
+          <p>本月风险迁移主要受宏观周期和债市波动驱动，两者合计影响占比超过 70%，外部环境压力是风险加速迁移的核心原因。</p>
+          <div className="migration-brief-illus migration-driver-illus" aria-hidden="true">
+            <FileText size={48} />
+            <UserRoundSearch size={56} />
+            <TrendingUp size={42} />
+          </div>
+        </div>
+      </section>
+
+      <section className="migration-overview-card migration-driver-section glass-card">
+        <header>
+          <h2>风险迁移驱动因素（本月）</h2>
+          <span>影响度 <ChevronDown size={15} /></span>
+        </header>
+        <div className="migration-driver-list">
+          {riskMigrationDrivers.map((item) => (
+            <button className={`migration-driver-card is-${item.tone}`} type="button" key={item.name}>
+              <span className="migration-driver-card__icon">
+                <item.icon size={23} />
+              </span>
+              <span className="migration-driver-card__content">
+                <span className="migration-driver-card__head">
+                  <strong>{item.name}</strong>
+                  <b>{item.score}</b>
+                  <ChevronRight size={18} />
+                </span>
+                <span className="migration-driver-card__desc">{item.desc}</span>
+                <span className="migration-driver-card__track">
+                  <i style={{ width: `${item.level}%` }} />
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="migration-driver-note">注：数值越大，对风险迁移的推动作用越强</p>
+      </section>
+
+      <section className="migration-overview-card migration-insight-card migration-driver-advice glass-card">
+        <div className="migration-card-title">
+          <span>
+            <Sparkles size={19} />
+          </span>
+          <h2>AI 建议重点关注</h2>
+        </div>
+        <ul>
+          <li>
+            <CheckCircle2 size={18} />
+            <p>宏观周期和债市波动短期内仍将持续影响风险迁移。</p>
+          </li>
+          <li>
+            <CheckCircle2 size={18} />
+            <p>建议加强高敏感行业和高杠杆客户的风险监测与预警。</p>
+          </li>
+        </ul>
+      </section>
+    </>
+  );
+}
+
+function getReturnTo(state: unknown, fallback: string) {
+  if (state && typeof state === "object" && "returnTo" in state) {
+    const returnTo = (state as { returnTo?: unknown }).returnTo;
+    if (typeof returnTo === "string") {
+      return returnTo;
+    }
+  }
+
+  return fallback;
 }
 
 function LargeCustomerTab() {

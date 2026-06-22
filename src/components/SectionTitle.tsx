@@ -6,7 +6,7 @@ type SectionTitleProps = {
 
 export function SectionTitle({ title, action, onAction }: SectionTitleProps) {
   return (
-    <div className="section-title">
+    <div className="section-title section-header">
       <h2>{title}</h2>
       {action ? (
         <button type="button" onClick={onAction}>

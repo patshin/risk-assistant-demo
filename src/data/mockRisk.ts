@@ -19,6 +19,22 @@ export type Reminder = {
   suggestion: string;
 };
 
+export type AIAlertTickerItem = {
+  id: string;
+  title: string;
+  isHot: boolean;
+};
+
+export type AIAlertNewsItem = {
+  id: string;
+  time: string;
+  isNew?: boolean;
+  title: string;
+  summary: string;
+  tags: string[];
+  route: string;
+};
+
 export type RiskBriefAI = {
   conclusion: string;
   reasons: string[];
@@ -186,7 +202,7 @@ export const homeEntries: HomeEntry[] = [
   },
   {
     key: "watch",
-    title: "近期看点",
+    title: "个人工作台",
     subtitle: "重点预警 / 数据摘要\n领导指引",
     temperatureLabel: "待处理 5",
     metaLabel: null,
@@ -431,7 +447,7 @@ export const reminders: Reminder[] = [
   {
     id: "estate",
     title: "地产链条风险信号升温",
-    badge: "新",
+    badge: "热",
     detail: "AI 识别到 6 家关联企业现金流覆盖率下行，供应商回款周期连续两周拉长。",
     suggestion: "建议将地产链条加入重点跟踪，并生成一页式领导汇报。",
   },
@@ -445,7 +461,137 @@ export const reminders: Reminder[] = [
     id: "public",
     title: "重点客户出现舆情预警",
     detail: "重点客户近 24 小时负面信息热度上升，关联授信余额与担保链条需要复核。",
-    suggestion: "建议联动客户经理补充尽调，并将处置进度同步到近期看点。",
+    suggestion: "建议联动客户经理补充尽调，并将处置进度同步到个人工作台。",
+  },
+  {
+    id: "supply-chain",
+    title: "供应链集中度风险上升",
+    detail: "AI 识别到建筑工程供应商集中度连续两周抬升，部分客户回款依赖单一核心方。",
+    suggestion: "建议生成供应链集中度排查清单，并同步相关子公司风险联系人。",
+  },
+  {
+    id: "urban-investment",
+    title: "城投平台再融资压力加大",
+    detail: "区域融资环境偏紧，部分城投相关客户短债滚续压力较上月上升。",
+    suggestion: "建议关注再融资窗口和关联担保链，纳入本周重点跟踪。",
+  },
+  {
+    id: "credit-card",
+    title: "信用卡不良率小幅上升",
+    detail: "消费信贷组合早期逾期率轻微抬头，AI 判断需观察连续性。",
+    suggestion: "建议复核高风险客群画像，并观察未来两周迁徙变化。",
+  },
+  {
+    id: "overseas",
+    title: "海外市场波动增加，关注外部风险",
+    detail: "海外权益与汇率波动同步加大，可能影响跨境资产估值和外币敞口。",
+    suggestion: "建议关注外部市场冲击路径，必要时生成压力情景分析。",
+  },
+];
+
+export const aiAlertTickerItems: AIAlertTickerItem[] = [
+  {
+    id: "alert-001",
+    title: "重点客户出现舆情预警",
+    isHot: true,
+  },
+  {
+    id: "alert-002",
+    title: "地产链条风险信号升温",
+    isHot: false,
+  },
+  {
+    id: "alert-003",
+    title: "债市波动加剧，关注久期风险",
+    isHot: true,
+  },
+  {
+    id: "alert-004",
+    title: "供应链集中度风险上升",
+    isHot: false,
+  },
+  {
+    id: "alert-005",
+    title: "城投平台再融资压力加大",
+    isHot: false,
+  },
+  {
+    id: "alert-006",
+    title: "信用卡不良率小幅上升",
+    isHot: false,
+  },
+  {
+    id: "alert-007",
+    title: "海外市场波动增加，关注外部风险",
+    isHot: true,
+  },
+];
+
+export const aiAlertNewsItems: AIAlertNewsItem[] = [
+  {
+    id: "news-001",
+    time: "09:25",
+    isNew: true,
+    title: "地产链条风险信号升温",
+    summary: "多家地产企业出现资金链紧张迹象，需重点跟踪核心大户现金流。",
+    tags: ["信用风险"],
+    route: "/risk/industry/real-estate-chain",
+  },
+  {
+    id: "news-002",
+    time: "09:18",
+    title: "债市波动加剧，关注久期风险",
+    summary: "国债收益率快速上行，信用利差走阔，资管组合风险暴露上升。",
+    tags: ["市场风险", "投资风险"],
+    route: "/risk/market/shock",
+  },
+  {
+    id: "news-003",
+    time: "09:05",
+    title: "重点客户出现舆情预警",
+    summary: "华东某大型建筑企业被媒体报道项目停工，潜在信用风险上升。",
+    tags: ["信用风险"],
+    route: "/risk/client/east-construction",
+  },
+  {
+    id: "news-004",
+    time: "08:57",
+    title: "供应链集中度风险上升",
+    summary: "部分行业供应商集中度提高，回款账期延长，需关注传导风险。",
+    tags: ["信用风险"],
+    route: "/credit",
+  },
+  {
+    id: "news-005",
+    time: "08:43",
+    title: "城投平台再融资压力加大",
+    summary: "多地城投平台到期债务集中，市场融资成本上升，需提前预警。",
+    tags: ["信用风险"],
+    route: "/credit",
+  },
+  {
+    id: "news-006",
+    time: "08:30",
+    title: "宏观数据波动，关注系统性风险",
+    summary: "最新宏观数据出现波动，需关注系统性风险对资产质量的影响。",
+    tags: ["宏观风险", "系统性风险"],
+    route: "/macro",
+  },
+  {
+    id: "news-007",
+    time: "08:15",
+    title: "信用卡不良率小幅上升",
+    summary: "信用卡业务不良率较上期上升 0.06pp，需关注区域和客群分布。",
+    tags: ["零售风险"],
+    route: "/watch",
+  },
+  {
+    id: "news-008",
+    time: "07:58",
+    title: "海外市场波动增加，关注外部风险",
+    summary: "海外权益市场波动上升，可能对境外敞口资产产生影响。",
+    tags: ["市场风险", "外部风险"],
+    route: "/investment",
   },
 ];
 

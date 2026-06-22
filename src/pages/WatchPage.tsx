@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   Bell,
@@ -20,6 +20,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { BottomAskBar, PageHeader, PillTag, useCopilot } from "../components";
+import { aiAlertNewsItems } from "../data/mockRisk";
 
 const todayItems = [
   {
@@ -135,16 +136,19 @@ const todayAllItems = [
 
 const todayFilters = ["全部", "高优先级", "宏观", "信用", "投资", "政策", "市场"];
 const trackingFilters = ["全部", "升温中", "观察中", "趋稳", "宏观", "信用", "投资"];
+const aiAlertFilters = ["全部", "信用风险", "市场风险", "投资风险", "宏观风险", "系统性风险", "零售风险", "外部风险"];
 
 export function WatchPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { openCopilot } = useCopilot();
+  const backPath = getReturnTo(location.state, "/");
 
   return (
     <div className="page watch-page">
       <div className="page-scroll watch-detail">
         <StatusBar />
-        <PageHeader title="近期看点" onBack={() => navigate("/")} />
+        <PageHeader title="个人工作台" onBack={() => navigate(backPath)} />
 
         <AISummary
           title="AI 今日总览"
@@ -198,7 +202,7 @@ export function WatchPage() {
         </section>
       </div>
 
-      <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“近期看点总览”" })} />
+      <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“个人工作台总览”" })} />
     </div>
   );
 }
@@ -232,6 +236,81 @@ export function TodayFocusPage() {
         <AIActionCard items={["将高优先级事项加入本周汇报。", "同步地产链条与城投风险至重点跟踪。"]} />
       </div>
       <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“今日重点风险事项”" })} />
+    </div>
+  );
+}
+
+export function AlertTimelinePage() {
+  const navigate = useNavigate();
+  const { openCopilot } = useCopilot();
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("全部");
+  const filteredItems =
+    activeFilter === "全部"
+      ? aiAlertNewsItems
+      : aiAlertNewsItems.filter((item) => item.tags.includes(activeFilter));
+
+  return (
+    <div className="page watch-page ai-alert-page">
+      <div className="page-scroll watch-detail ai-alert-page__scroll">
+        <StatusBar />
+        <PageHeader
+          title="AI 主动提醒"
+          onBack={() => navigate("/")}
+          action={
+            <button className="ai-alert-filter-button" type="button" onClick={() => setFilterOpen((current) => !current)}>
+              筛选
+              <ListFilter size={16} />
+            </button>
+          }
+        />
+        <p className="ai-alert-page__intro">AI 基于实时监测和模型分析，自动生成的重要风险提醒，按时间倒序展示，最新在上。</p>
+        {filterOpen ? (
+          <div className="ai-alert-filter-row" aria-label="风险类型筛选">
+            {aiAlertFilters.map((filter) => (
+              <button
+                className={filter === activeFilter ? "is-active" : ""}
+                type="button"
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        <section className="ai-alert-timeline" aria-label="AI 主动提醒时间轴">
+          {filteredItems.map((item) => (
+            <button
+              className={`ai-alert-timeline-item${item.isNew ? " is-new" : ""}`}
+              type="button"
+              key={item.id}
+              onClick={() => navigate(item.route, { state: { returnTo: "/risk/ai-alerts" } })}
+            >
+              <time>{item.time}</time>
+              <span className="ai-alert-timeline-item__rail" aria-hidden="true">
+                <i />
+              </span>
+              <span className="ai-alert-timeline-item__content">
+                <span className="ai-alert-timeline-item__title">
+                  {item.isNew ? <b>新</b> : null}
+                  <strong>{item.title}</strong>
+                </span>
+                <span className="ai-alert-timeline-item__summary">{item.summary}</span>
+                <span className="ai-alert-timeline-item__tags">
+                  {item.tags.map((tag) => (
+                    <em key={tag}>{tag}</em>
+                  ))}
+                </span>
+              </span>
+            </button>
+          ))}
+        </section>
+
+        <div className="ai-alert-empty">— 没有更多数据了 —</div>
+      </div>
+      <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“AI 主动提醒时间轴”" })} />
     </div>
   );
 }
@@ -435,6 +514,17 @@ function getWatchActionOptions(action: string) {
   }
 
   return { context: `正在分析“${action}”` };
+}
+
+function getReturnTo(state: unknown, fallback: string) {
+  if (state && typeof state === "object" && "returnTo" in state) {
+    const returnTo = (state as { returnTo?: unknown }).returnTo;
+    if (typeof returnTo === "string") {
+      return returnTo;
+    }
+  }
+
+  return fallback;
 }
 
 function StatusBar() {

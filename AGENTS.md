@@ -29,6 +29,14 @@ Page files should compose UI and page flow. Put reusable UI in `src/components/`
 - Preserve the existing bottom AI input and global AI copilot interaction model.
 - Horizontal chips may scroll, but should avoid visible scrollbars.
 
+## Mobile Readability System
+
+Use the shared typography tokens, spacing tokens, icon sizes, card styles, chips, buttons, `PageHeader`, `SectionTitle`, `MetricCard`, `PillTag`, and bottom AI input patterns before writing page-specific UI.
+
+Do not invent page-specific title sizes, arbitrary icon sizes, or custom card rhythm unless the user explicitly asks. Optimize for iPhone-sized screens around 390px width: 22px page titles, 16–18px section titles, 14–15px body text, 12–13px secondary text, 18px default icons, 44–48px tap targets, and 16px page padding.
+
+Avoid dense tablet-style layouts, tiny text, awkward label wrapping, multi-line chips, and dashboard-like information walls.
+
 ## Code Style
 
 - Use TypeScript and React function components.

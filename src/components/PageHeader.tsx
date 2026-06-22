@@ -12,7 +12,7 @@ export function PageHeader({ title, badge, onBack, action }: PageHeaderProps) {
   return (
     <header className="page-header">
       <button className="icon-button" type="button" aria-label="返回" onClick={onBack}>
-        <ArrowLeft size={20} strokeWidth={2.2} />
+        <ArrowLeft size={21} strokeWidth={2.2} />
       </button>
       <h1>
         {title}
