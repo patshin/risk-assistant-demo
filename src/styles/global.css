@@ -953,62 +953,8 @@ button {
   }
 }
 
-.status-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 28px;
-  margin-bottom: 14px;
-  padding: 0 8px;
-  color: #14110d;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.status-bar__icons {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.signal {
-  display: flex;
-  align-items: end;
-  gap: 2px;
-}
-
-.signal span {
-  width: 3px;
-  border-radius: 2px;
-  background: currentColor;
-}
-
-.signal span:nth-child(1) {
-  height: 6px;
-}
-
-.signal span:nth-child(2) {
-  height: 9px;
-}
-
-.signal span:nth-child(3) {
-  height: 12px;
-}
-
-.battery {
-  width: 25px;
-  height: 12px;
-  border: 2px solid currentColor;
-  border-radius: 4px;
-  box-shadow: inset -5px 0 0 currentColor;
-}
-
 .home-page .page-scroll {
   gap: 10px;
-}
-
-.home-page .status-bar {
-  margin-bottom: 0;
 }
 
 .home-top-actions {
@@ -3283,12 +3229,6 @@ button {
 
 .risk-migration-screen {
   gap: 10px;
-}
-
-.risk-migration-page .status-bar {
-  margin-bottom: 0;
-  padding: 0 14px;
-  font-size: 16px;
 }
 
 .risk-migration-page .page-header {

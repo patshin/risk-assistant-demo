@@ -47,7 +47,6 @@ export function BriefDetailPage() {
   return (
     <div className="page brief-page">
       <div className="page-scroll brief-detail">
-        <StatusBar time="9:41" />
         <PageHeader
           title="今日风险简报"
           onBack={() => navigate("/")}
@@ -293,23 +292,6 @@ function SectionHeader({ title, action }: { title: string; action?: string }) {
           <ChevronRight size={14} />
         </span>
       ) : null}
-    </div>
-  );
-}
-
-function StatusBar({ time }: { time: string }) {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>{time}</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
-      </div>
     </div>
   );
 }

@@ -25,7 +25,6 @@ export function CreditCustomerListPage() {
   return (
     <div className="page credit-page">
       <div className="page-scroll credit-detail">
-        <StatusBar />
         <PageHeader
           title="全部客户风险"
           onBack={() => navigate("/credit")}
@@ -68,23 +67,6 @@ export function CreditCustomerListPage() {
       </div>
 
       <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“全部客户风险列表”" })} />
-    </div>
-  );
-}
-
-function StatusBar() {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>9:41</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
-      </div>
     </div>
   );
 }

@@ -103,7 +103,6 @@ export function MacroRiskPage() {
   return (
     <div className="page macro-page">
       <div className="page-scroll macro-detail">
-        <StatusBar />
         <PageHeader
           title="宏观风险"
           onBack={() => navigate(backPath)}
@@ -487,22 +486,6 @@ function SectionHeader({ title, action }: { title: string; action?: string }) {
   );
 }
 
-function StatusBar() {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>9:41</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
-      </div>
-    </div>
-  );
-}
 
 function ClipboardIcon({ size = 24 }: { size?: number }) {
   return <CircleGauge size={size} />;

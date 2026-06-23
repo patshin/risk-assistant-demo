@@ -55,7 +55,6 @@ export function CustomerRiskDetailPage() {
   return (
     <div className="page customer-risk-detail-page">
       <div className="page-scroll customer-risk-detail-screen">
-        <StatusBar />
         <PageHeader
           title="客户风险详情"
           onBack={() => navigate(backPath)}
@@ -588,21 +587,4 @@ function getEventFilterChips(events: ExternalEventCounts) {
 
 function getExternalEventTotal(events: ExternalEventCounts) {
   return events.sentiment + events.litigation + events.enforcement + (events.regulatory ?? 0) + (events.announcement ?? 0);
-}
-
-function StatusBar() {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>9:41</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
-      </div>
-    </div>
-  );
 }

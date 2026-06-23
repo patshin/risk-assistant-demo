@@ -125,7 +125,6 @@ export function InvestmentRiskPage() {
   return (
     <div className="page investment-page">
       <div className="page-scroll investment-detail">
-        <StatusBar />
         <PageHeader
           title="投资风险"
           onBack={() => navigate(backPath)}
@@ -480,23 +479,6 @@ function FactorLinkConnector({ type }: { type: "arrow" | "plus" }) {
   return (
     <div className={`factor-linkage__connector factor-linkage__connector--${type}`} aria-hidden="true">
       {type === "plus" ? "+" : "→"}
-    </div>
-  );
-}
-
-function StatusBar() {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>9:41</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
-      </div>
     </div>
   );
 }

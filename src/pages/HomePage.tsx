@@ -27,8 +27,6 @@ export function HomePage() {
   return (
     <div className="page home-page">
       <div className="page-scroll">
-        <StatusBar />
-
         <div className="home-top-actions">
           <button className="icon-button" type="button" aria-label="打开菜单">
             <Menu size={22} />
@@ -124,23 +122,6 @@ export function HomePage() {
       </div>
 
       <BottomAskBar onOpen={() => openCopilot({ context: "正在分析“首页风险总览与主动提醒”" })} />
-    </div>
-  );
-}
-
-function StatusBar() {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>9:41</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
-      </div>
     </div>
   );
 }

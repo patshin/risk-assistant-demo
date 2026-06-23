@@ -52,7 +52,6 @@ export function ReportPage() {
   return (
     <div className="page report-page">
       <div className="page-scroll report-detail">
-        <StatusBar time="09:30" />
         <PageHeader
           title="领导汇报"
           badge={<span className="header-ai-badge">AI生成</span>}
@@ -175,23 +174,6 @@ export function ReportPage() {
           <MessageCircle size={18} />
           继续追问
         </button>
-      </div>
-    </div>
-  );
-}
-
-function StatusBar({ time }: { time: string }) {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>{time}</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
       </div>
     </div>
   );

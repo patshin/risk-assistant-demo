@@ -164,7 +164,6 @@ export function CreditRiskPage() {
   return (
     <div className="page credit-page">
       <div className="page-scroll credit-detail">
-        <StatusBar />
         <PageHeader
           title="信用风险"
           onBack={() => navigate(backPath)}
@@ -200,7 +199,6 @@ export function RiskMigrationTrendPage() {
   return (
     <div className="page risk-migration-page">
       <div className="page-scroll risk-migration-screen">
-        <StatusBar />
         <PageHeader
           title="风险迁移趋势"
           onBack={() => navigate(backPath)}
@@ -1428,22 +1426,5 @@ function AIInsight({ children }: { children: string }) {
       </h2>
       <p>{children}</p>
     </section>
-  );
-}
-
-function StatusBar() {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>9:41</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
-      </div>
-    </div>
   );
 }

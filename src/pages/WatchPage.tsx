@@ -147,7 +147,6 @@ export function WatchPage() {
   return (
     <div className="page watch-page">
       <div className="page-scroll watch-detail">
-        <StatusBar />
         <PageHeader title="个人工作台" onBack={() => navigate(backPath)} />
 
         <AISummary
@@ -215,7 +214,6 @@ export function TodayFocusPage() {
   return (
     <div className="page watch-page">
       <div className="page-scroll watch-detail">
-        <StatusBar />
         <PageHeader title="今日重点" onBack={() => navigate("/watch")} />
         <AISummary
           title="AI 今日摘要"
@@ -253,7 +251,6 @@ export function AlertTimelinePage() {
   return (
     <div className="page watch-page ai-alert-page">
       <div className="page-scroll watch-detail ai-alert-page__scroll">
-        <StatusBar />
         <PageHeader
           title="AI 主动提醒"
           onBack={() => navigate("/")}
@@ -323,7 +320,6 @@ export function TrackingListPage() {
   return (
     <div className="page watch-page">
       <div className="page-scroll watch-detail">
-        <StatusBar />
         <PageHeader
           title="重点跟踪"
           onBack={() => navigate("/watch")}
@@ -525,21 +521,4 @@ function getReturnTo(state: unknown, fallback: string) {
   }
 
   return fallback;
-}
-
-function StatusBar() {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>9:41</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
-      </div>
-    </div>
-  );
 }

@@ -259,7 +259,6 @@ function RiskAnalysisLayout({ title, onBack, children }: { title: string; onBack
   return (
     <div className="page risk-analysis-page">
       <div className="page-scroll risk-analysis-scroll">
-        <StatusBar time="9:41" />
         <PageHeader
           title={title}
           onBack={onBack}
@@ -407,23 +406,6 @@ function MiniLineChart({ values, labels, height = 70 }: { values: number[]; labe
           ))}
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function StatusBar({ time }: { time: string }) {
-  return (
-    <div className="status-bar" aria-hidden="true">
-      <span>{time}</span>
-      <div className="status-bar__icons">
-        <span className="signal">
-          <span />
-          <span />
-          <span />
-        </span>
-        <span>Wi-Fi</span>
-        <span className="battery" />
-      </div>
     </div>
   );
 }
