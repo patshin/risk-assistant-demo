@@ -1,4 +1,4 @@
-export type CreditRiskLevel = "一级预警" | "二级预警" | "已出险" | "关注中";
+export type CreditRiskLevel = "重大" | "一级预警" | "二级预警" | "已出险" | "关注中" | "正常";
 export type CreditRating = "1A" | "1B" | "1C" | "1D" | "2A" | "2B" | "2C" | "2D";
 export type RatingTrend = "down" | "stable";
 
@@ -163,8 +163,17 @@ export type ConcentrationRiskView = {
   actions: string[];
 };
 
-export const customerFilters = ["全部", "一级预警", "二级预警", "已出险", "关注中"] as const;
+export const customerFilters = ["全部", "重大", "二级预警", "一级预警", "已出险", "关注中"] as const;
 export type CustomerFilter = (typeof customerFilters)[number];
+
+const customerRiskSortOrder: Record<CreditRiskLevel, number> = {
+  重大: 0,
+  二级预警: 1,
+  一级预警: 2,
+  已出险: 3,
+  关注中: 4,
+  正常: 4,
+};
 
 export const creditCustomers: CreditCustomer[] = [
   { id: "huadong-construction", name: "华东建设集团", rating: "1B", ratingTrend: "down", riskLevel: "一级预警", riskScore: 86, scoreDelta: 12, mainRisks: ["现金流承压", "商票逾期", "舆情风险"], externalEvents: { sentiment: 2, litigation: 1, enforcement: 1 }, latestUpdate: "新增 2 条负面舆情", updatedAt: "更新 2 小时前" },
@@ -625,7 +634,7 @@ const customerProfileOverrides: Record<string, Partial<CustomerRiskProfile>> = {
 };
 
 export function getCustomerStatusVariant(riskLevel: CreditRiskLevel) {
-  if (riskLevel === "一级预警" || riskLevel === "已出险") {
+  if (riskLevel === "重大" || riskLevel === "一级预警" || riskLevel === "已出险") {
     return "warming" as const;
   }
 
@@ -636,12 +645,24 @@ export function getCustomerStatusVariant(riskLevel: CreditRiskLevel) {
   return "watch" as const;
 }
 
+function sortCreditCustomers(customers: CreditCustomer[]) {
+  return [...customers].sort((left, right) => {
+    const orderDiff = customerRiskSortOrder[left.riskLevel] - customerRiskSortOrder[right.riskLevel];
+
+    if (orderDiff !== 0) {
+      return orderDiff;
+    }
+
+    return right.riskScore - left.riskScore;
+  });
+}
+
 export function filterCreditCustomers(filter: CustomerFilter) {
   if (filter === "全部") {
-    return creditCustomers;
+    return sortCreditCustomers(creditCustomers);
   }
 
-  return creditCustomers.filter((customer) => customer.riskLevel === filter);
+  return sortCreditCustomers(creditCustomers.filter((customer) => customer.riskLevel === filter));
 }
 
 export function creditCustomerStats() {

@@ -71,7 +71,7 @@ export function HomePage() {
                 entry.key === "macro"
                   ? navigate("/macro")
                   : entry.key === "credit"
-                    ? navigate("/credit")
+                    ? navigate("/credit?tab=large")
                   : entry.key === "investment"
                       ? navigate("/investment")
                       : entry.key === "watch"

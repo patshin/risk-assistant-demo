@@ -1,5 +1,5 @@
 import { useRef, useState, type MouseEvent, type MutableRefObject } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Bot,
   Building2,
@@ -22,13 +22,10 @@ import {
   UserRoundSearch,
   UsersRound,
 } from "lucide-react";
-import { BottomAskBar, BottomSheet, DonutChart, PageHeader, PillTag, TabBar, useCopilot } from "../components";
+import { BottomAskBar, DonutChart, PageHeader, PillTag, TabBar, useCopilot } from "../components";
 import {
   aiPredictedCustomers,
   concentrationRiskViews,
-  creditCustomerStats,
-  customerFilters,
-  filterCreditCustomers,
   getCustomerRiskProfile,
   getCustomerStatusVariant,
   migrationTrendData,
@@ -40,18 +37,17 @@ import {
   type ConcentrationSource,
   type ConcentrationTrendPoint,
   type CreditCustomer,
-  type CustomerFilter,
-  type CustomerRiskProfile,
   type ExternalEventCounts,
   type MigrationTrendPoint,
   type RiskFactorItem,
   type SubsidiaryRiskItem,
 } from "../data/creditCustomers";
+import { LargeExposureHomeContent } from "./LargeExposurePage";
 
 const tabs = [
   { key: "large", label: "大户风险" },
   { key: "concentration", label: "集中度风险" },
-  { key: "warningDefault", label: "预警与出险" },
+  { key: "warning", label: "预警与出险" },
 ];
 
 const concentrationDims: ConcentrationDimension[] = ["客户", "行业", "区域"];
@@ -61,7 +57,12 @@ const migrationViewTabs = [
   { key: "driver", label: "风险驱动" },
 ] as const;
 
+type CreditRiskTab = (typeof tabs)[number]["key"];
 type MigrationViewTab = (typeof migrationViewTabs)[number]["key"];
+
+function getCreditRiskTab(tab: string | null): CreditRiskTab {
+  return tabs.some((item) => item.key === tab) ? (tab as CreditRiskTab) : "large";
+}
 
 const subsidiaryMigrationCards = [
   {
@@ -152,8 +153,9 @@ const riskMigrationDrivers = [
 export function CreditRiskPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { openCopilot } = useCopilot();
-  const [activeTab, setActiveTab] = useState("large");
+  const activeTab = getCreditRiskTab(searchParams.get("tab"));
   const predictedSectionRef = useRef<HTMLElement | null>(null);
   const backPath = getReturnTo(location.state, "/");
 
@@ -174,16 +176,29 @@ export function CreditRiskPage() {
           }
         />
 
-        <TabBar items={tabs} activeKey={activeTab} onChange={setActiveTab} />
+        <TabBar
+          items={tabs}
+          activeKey={activeTab}
+          onChange={(key) => setSearchParams({ tab: key })}
+        />
 
-        {activeTab === "large" ? <LargeCustomerTab /> : null}
+        {activeTab === "large" ? <LargeExposureHomeContent /> : null}
         {activeTab === "concentration" ? <ConcentrationTab /> : null}
-        {activeTab === "warningDefault" ? <WarningDefaultTab predictedSectionRef={predictedSectionRef} onViewHighRisk={scrollToPredictedCustomers} /> : null}
+        {activeTab === "warning" ? <WarningDefaultTab predictedSectionRef={predictedSectionRef} onViewHighRisk={scrollToPredictedCustomers} /> : null}
       </div>
 
       <BottomAskBar
-        placeholder={activeTab === "warningDefault" ? "问预警、查出险、生成迁徙报告…" : undefined}
-        onOpen={() => openCopilot({ context: activeTab === "warningDefault" ? "正在分析“信用风险迁徙与预警出险”" : activeTab === "concentration" ? "正在分析“信用风险集中趋势”" : "正在分析“信用风险重点客户”" })}
+        placeholder={activeTab === "large" ? "问大户风险、筛选客户、生成名单..." : activeTab === "warning" ? "问预警、查出险、生成迁徙报告…" : undefined}
+        onOpen={() =>
+          openCopilot({
+            context:
+              activeTab === "large"
+                ? "正在分析“大户风险首页与 AI 推荐名单”"
+                : activeTab === "warning"
+                  ? "正在分析“信用风险迁徙与预警出险”"
+                  : "正在分析“信用风险集中趋势”",
+          })
+        }
       />
     </div>
   );
@@ -474,46 +489,6 @@ function getReturnTo(state: unknown, fallback: string) {
   }
 
   return fallback;
-}
-
-function LargeCustomerTab() {
-  const navigate = useNavigate();
-  const [filter, setFilter] = useState<CustomerFilter>("全部");
-  const [eventProfile, setEventProfile] = useState<CustomerRiskProfile | null>(null);
-  const stats = creditCustomerStats();
-  const visibleCustomers = filterCreditCustomers(filter).slice(0, 3);
-
-  return (
-    <>
-      <section className="customer-list-summary glass-card">
-        <span>AI 统计摘要</span>
-        <h2>当前共 {stats.total} 家集团/公司存在风险信号</h2>
-        <p>一级预警 {stats.firstLevel} 家 · 二级预警 {stats.secondLevel} 家 · 已出险 {stats.defaulted} 家 · 关注中 {stats.watching} 家</p>
-      </section>
-
-      <div className="credit-chip-row">
-        {customerFilters.map((item) => (
-          <button className={item === filter ? "is-active" : ""} type="button" key={item} onClick={() => setFilter(item)}>
-            {item}
-          </button>
-        ))}
-      </div>
-
-      <div className="customer-card-list">
-        {visibleCustomers.map((customer) => (
-          <CustomerRiskCard customer={customer} key={customer.id} onOpenEvents={setEventProfile} />
-        ))}
-      </div>
-
-      <button className="view-all-customers" type="button" onClick={() => navigate("/credit/customers")}>
-        查看全部客户
-        <ChevronRight size={16} />
-      </button>
-
-      <AIInsight>本周重点客户风险整体上升，建议关注地产、建筑、城投相关客户的现金流与债务压力。</AIInsight>
-      <CustomerEventBottomSheet profile={eventProfile} onClose={() => setEventProfile(null)} />
-    </>
-  );
 }
 
 function ConcentrationTab() {
@@ -1111,10 +1086,8 @@ function getConcentrationY(value: number) {
 
 export function CustomerRiskCard({
   customer,
-  onOpenEvents,
 }: {
   customer: CreditCustomer;
-  onOpenEvents?: (profile: CustomerRiskProfile) => void;
 }) {
   const navigate = useNavigate();
   const profile = getCustomerRiskProfile(customer.id);
@@ -1126,11 +1099,6 @@ export function CustomerRiskCard({
   };
   const openEvents = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    if (onOpenEvents) {
-      onOpenEvents(profile);
-      return;
-    }
-
     navigate(`/risk/customer/${customer.id}?tab=events`);
   };
 
@@ -1186,103 +1154,6 @@ export function CustomerRiskCard({
   );
 }
 
-function CustomerEventBottomSheet({
-  profile,
-  onClose,
-}: {
-  profile: CustomerRiskProfile | null;
-  onClose: () => void;
-}) {
-  const navigate = useNavigate();
-  const { openCopilot } = useCopilot();
-  const [summaryVisible, setSummaryVisible] = useState(false);
-
-  if (!profile) {
-    return null;
-  }
-
-  const chips = getSheetFilterChips(profile.externalEvents);
-
-  return (
-    <BottomSheet open title="舆情与司法事件" onClose={onClose}>
-      <div className="external-event-sheet">
-        <div className="external-event-sheet__summary">
-          <p>
-            近 7 日新增外部风险信号 <strong>{getExternalEventTotal(profile.externalEvents)}</strong> 条
-          </p>
-          <span>{profile.updatedAt}</span>
-        </div>
-        <div className="external-sheet-filter-row">
-          {chips.map((chip) => (
-            <button className={chip.key === "all" ? "is-active" : ""} type="button" key={chip.key}>
-              {chip.label}
-            </button>
-          ))}
-        </div>
-        <EventTimelinePreview profile={profile} />
-        <section className="external-event-ai-card">
-          <h3>
-            <Sparkles size={17} />
-            AI 判断
-          </h3>
-          <p>{profile.eventInsight}</p>
-        </section>
-        <div className="external-sheet-actions">
-          <button
-            className="ghost-button"
-            type="button"
-            onClick={() => {
-              onClose();
-              navigate(`/risk/customer/${profile.id}?tab=events`);
-            }}
-          >
-            <FileText size={17} />
-            查看完整事件流
-          </button>
-          <button
-            className="primary-button"
-            type="button"
-            onClick={() => {
-              setSummaryVisible(true);
-              openCopilot({ intent: "report", context: `正在生成“${profile.name}客户风险摘要”` });
-            }}
-          >
-            <Sparkles size={17} />
-            生成客户风险摘要
-          </button>
-        </div>
-        {summaryVisible ? (
-          <p className="external-event-generated">
-            {profile.name}近 7 日外部风险信号密度上升，且与内部评级下调、现金流承压信号共振。建议暂停新增授信，排查关联担保链，并纳入一级跟踪。
-          </p>
-        ) : null}
-      </div>
-    </BottomSheet>
-  );
-}
-
-function EventTimelinePreview({ profile }: { profile: CustomerRiskProfile }) {
-  return (
-    <div className="external-event-timeline external-event-timeline--sheet">
-      {profile.eventTimeline.map((item) => (
-        <article className="external-event-item" key={`${item.time}-${item.title}`}>
-          <span className="external-event-item__icon" aria-hidden="true">
-            {getExternalEventIcon(item.type)}
-          </span>
-          <div>
-            <span className="external-event-item__time">{item.time}</span>
-            <h3>{item.title}</h3>
-            <p>{item.summary}</p>
-            <em>影响风险因子：{item.factors.join("、")}</em>
-          </div>
-          <strong>{item.type}</strong>
-          <ChevronRight size={17} />
-        </article>
-      ))}
-    </div>
-  );
-}
-
 function getExternalEventChips(events: ExternalEventCounts) {
   const chips = [
     { key: "sentiment", label: `舆情 ${events.sentiment}`, count: events.sentiment, icon: MessageCircle },
@@ -1294,21 +1165,6 @@ function getExternalEventChips(events: ExternalEventCounts) {
   ];
 
   return chips.filter((chip) => chip.count > 0);
-}
-
-function getSheetFilterChips(events: ExternalEventCounts) {
-  return [
-    { key: "all", label: `全部 ${getExternalEventTotal(events)}` },
-    { key: "sentiment", label: `负面舆情 ${events.sentiment}` },
-    { key: "litigation", label: `诉讼 ${events.litigation}` },
-    { key: "enforcement", label: `被执行 ${events.enforcement}` },
-    { key: "regulatory", label: `监管 ${events.regulatory ?? 0}` },
-    { key: "announcement", label: `公告 ${events.announcement ?? 0}` },
-  ];
-}
-
-function getExternalEventTotal(events: ExternalEventCounts) {
-  return events.sentiment + events.litigation + events.enforcement + (events.regulatory ?? 0) + (events.announcement ?? 0);
 }
 
 function getRatingTone(rating: string) {

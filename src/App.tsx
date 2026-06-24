@@ -1,5 +1,5 @@
 import { useLayoutEffect } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { GlobalCopilotProvider } from "./components/GlobalCopilot";
 import { BriefDetailPage } from "./pages/BriefDetailPage";
@@ -8,6 +8,7 @@ import { CreditCustomerListPage } from "./pages/CreditCustomerListPage";
 import { CustomerRiskDetailPage } from "./pages/CustomerRiskDetailPage";
 import { HomePage } from "./pages/HomePage";
 import { InvestmentRiskPage } from "./pages/InvestmentRiskPage";
+import { LargeExposureDetailPage, LargeExposureListPage } from "./pages/LargeExposurePage";
 import { MacroRiskPage } from "./pages/MacroRiskPage";
 import { ReportPage } from "./pages/ReportPage";
 import { ClientRiskPanoramaPage, IndustryRiskAnalysisPage, MarketShockAnalysisPage } from "./pages/RiskAnalysisPages";
@@ -24,6 +25,9 @@ export default function App() {
           <Route path="/macro" element={<MacroRiskPage />} />
           <Route path="/credit" element={<CreditRiskPage />} />
           <Route path="/credit/customers" element={<CreditCustomerListPage />} />
+          <Route path="/credit/large-exposure" element={<Navigate to="/credit?tab=large" replace />} />
+          <Route path="/credit/large-exposure/list" element={<LargeExposureListPage />} />
+          <Route path="/credit/large-exposure/:id" element={<LargeExposureDetailPage />} />
           <Route path="/risk/migration" element={<RiskMigrationTrendPage />} />
           <Route path="/risk/customer/:id" element={<CustomerRiskDetailPage />} />
           <Route path="/investment" element={<InvestmentRiskPage />} />
