@@ -32,6 +32,11 @@
   --space-row-y: 12px;
   --touch-target: 44px;
   --touch-target-lg: 48px;
+  --btn-height-sm: 32px;
+  --btn-height-md: 40px;
+  --btn-height-lg: 48px;
+  --btn-radius: 999px;
+  --chip-height: 30px;
   --icon-size-sm: 15px;
   --icon-size: 18px;
   --icon-size-nav: 21px;

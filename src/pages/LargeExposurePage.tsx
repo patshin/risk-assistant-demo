@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   BarChart3,
   Bell,
-  Bot,
   BriefcaseBusiness,
   Building2,
   CalendarClock,
@@ -46,6 +45,12 @@ import {
 } from "../data/largeExposure";
 
 const homeTabs = ["AI 推荐关注 8", "持仓较高 12", "风险上行 6", "已出险 3"];
+const sortOptions = [
+  { key: "risk", label: "风险上行优先" },
+  { key: "holding", label: "持仓规模从高到低" },
+  { key: "reduction", label: "较年初压降不足优先" },
+  { key: "updated", label: "最新更新时间" },
+] as const;
 const defaultFilters: LargeExposureFilters = {
   industries: [],
   natures: [],
@@ -66,6 +71,7 @@ const detailTabs = [
 ] as const;
 
 type DetailTab = (typeof detailTabs)[number]["key"];
+type LargeExposureSortKey = (typeof sortOptions)[number]["key"];
 type HoldingRange = keyof typeof holdingTrendData;
 type LargeExposureFilters = Record<LargeExposureFilterKey, string[]>;
 type SheetKind =
@@ -103,9 +109,10 @@ export function LargeExposureHomeContent() {
   const [sheet, setSheet] = useState<SheetKind>(null);
   const [filters, setFilters] = useState<LargeExposureFilters>(defaultFilters);
   const [draftFilters, setDraftFilters] = useState<LargeExposureFilters>(defaultFilters);
+  const [sortKey, setSortKey] = useState<LargeExposureSortKey>("risk");
   const [toast, showToast] = useToast();
   const selectedFilters = getSelectedFilterItems(filters);
-  const filteredCustomers = useMemo(() => filterLargeExposureCustomers(getHomeTabCustomers(activeTab), filters), [activeTab, filters]);
+  const filteredCustomers = useMemo(() => sortLargeExposureCustomers(filterLargeExposureCustomers(getHomeTabCustomers(activeTab), filters), sortKey), [activeTab, filters, sortKey]);
   const visibleCustomers = filteredCustomers.slice(0, 5);
 
   const openFilter = () => {
@@ -115,29 +122,38 @@ export function LargeExposureHomeContent() {
 
   return (
     <div className="large-home large-home-content">
-      <AiBlock
-        label="AI 今日洞察"
-        title={
-          <>
-            大户风险整体可控，但 <em>6</em> 家客户风险边际上升
-          </>
-        }
-        description="其中 3 家来自房地产链条，2 家持仓较年初未明显压降，1 家出现负面舆情与财务恶化共振。"
-        icon={<Bot size={20} />}
-        art={<ShieldChartArt />}
-        variant="hero"
-      />
-
-      <section className="large-stat-grid" aria-label="关键统计">
+      <section className="large-home-section-title">
+        <h2>大户风险总览</h2>
+        <span>集团敞口与策略视角</span>
+      </section>
+      <section className="large-stat-grid" aria-label="大户风险总览">
         <MetricTile icon={<BriefcaseBusiness size={18} />} label="重点管理" value="6 家" subValue="较上月 +1" tone="orange" />
         <MetricTile icon={<ShieldAlert size={18} />} label="出险客户" value="3 家" subValue="较上月 -" tone="orange" />
         <MetricTile icon={<TrendingUp size={18} />} label="风险上行" value="8 家" subValue="较上月 +2" tone="orange" />
         <MetricTile icon={<PieChart size={18} />} label="持仓较年初" value="-12.4%" subValue="已压降" tone="green" />
       </section>
 
+      <AiBlock
+        label="今日重点关注"
+        title={
+          <>
+            <em>6</em> 家客户风险边际上行
+          </>
+        }
+        description="其中 3 家存在“外部经营压力 + 内部持仓未明显压降”的共振信号。建议优先查看房地产链条、融资成本上行和灰名单客户，并确认当前管理策略是否需要升级。"
+        icon={<ShieldAlert size={20} />}
+        art={<ShieldChartArt />}
+        variant="hero"
+      />
+
+      <section className="large-home-section-title">
+        <h2>筛选与排序</h2>
+        <span>按管理动作快速收敛名单</span>
+      </section>
       <PillTabs items={homeTabs} active={activeTab} onChange={setActiveTab} />
 
       <FilterStrip hasActiveFilters={selectedFilters.length > 0} onOpen={openFilter} />
+      <SortControl value={sortKey} onChange={setSortKey} />
 
       <SelectedFilterRow
         filters={filters}
@@ -189,10 +205,11 @@ export function LargeExposureListPage() {
   const [sheet, setSheet] = useState<SheetKind>(null);
   const [filters, setFilters] = useState<LargeExposureFilters>(defaultFilters);
   const [draftFilters, setDraftFilters] = useState<LargeExposureFilters>(defaultFilters);
+  const [sortKey, setSortKey] = useState<LargeExposureSortKey>("risk");
   const [visibleCount, setVisibleCount] = useState(10);
   const [toast, showToast] = useToast();
   const selectedFilters = getSelectedFilterItems(filters);
-  const filteredCustomers = useMemo(() => filterLargeExposureCustomers(largeExposureCustomers, filters), [filters]);
+  const filteredCustomers = useMemo(() => sortLargeExposureCustomers(filterLargeExposureCustomers(largeExposureCustomers, filters), sortKey), [filters, sortKey]);
   const visibleCustomers = filteredCustomers.slice(0, visibleCount);
 
   useEffect(() => {
@@ -209,6 +226,7 @@ export function LargeExposureListPage() {
       <LargeTopNav title="大户客户列表" onBack={() => navigate("/credit?tab=large")} right={<RoundIconButton label="分享"><Share2 size={20} /></RoundIconButton>} />
 
       <FilterStrip hasActiveFilters={selectedFilters.length > 0} onOpen={openFilter} />
+      <SortControl value={sortKey} onChange={setSortKey} />
       <SelectedFilterRow
         filters={filters}
         onRemove={(key, value) => setFilters((current) => removeFilterValue(current, key, value))}
@@ -284,11 +302,11 @@ export function LargeExposureDetailPage() {
       <CoreStatusCard customer={customer} onOpenRating={() => setSheet("rating")} />
       <StrategyCard customer={customer} onMock={() => showToast("已打开策略记录草稿")} />
       <AiBlock
-        label="AI 风险判断"
-        title="该客户风险较上月上升"
-        description="主要受盈利下滑、行业景气度下降及融资成本上升影响。集团持仓虽较年初已有压降，但存量规模仍需重点跟踪。"
+        label="风险变化解释"
+        title={`${customer.riskTrend}，当前策略为${customer.strategy}`}
+        description={getRiskExplanation(customer)}
         icon={<Sparkles size={18} />}
-        chips={["风险趋势：上行", "关键驱动：盈利下滑、融资成本上升", "关注等级：高"]}
+        chips={[`风险趋势：${getShortTrend(customer.riskTrend)}`, `关键驱动：${getRiskDrivers(customer)}`, `关注等级：${getAttentionLevel(customer)}`]}
       />
       <DetailTabs active={activeTab} onChange={setTab} />
 
@@ -302,7 +320,7 @@ export function LargeExposureDetailPage() {
         />
       ) : null}
       {activeTab === "external" ? <ExternalRiskTab customer={customer} onOpenSheet={setSheet} /> : null}
-      {activeTab === "forecast" ? <ForecastTab onOpenSheet={setSheet} onToast={showToast} /> : null}
+      {activeTab === "forecast" ? <ForecastTab customer={customer} onOpenSheet={setSheet} onToast={showToast} /> : null}
 
       <DetailSheets customer={customer} sheet={sheet} onClose={() => setSheet(null)} onToast={showToast} />
       <MockToast message={toast} />
@@ -472,6 +490,24 @@ function FilterStrip({ hasActiveFilters, onOpen }: { hasActiveFilters: boolean; 
   );
 }
 
+function SortControl({ value, onChange }: { value: LargeExposureSortKey; onChange: (value: LargeExposureSortKey) => void }) {
+  return (
+    <section className="large-sort-row" aria-label="排序">
+      <span>排序</span>
+      <label className="large-sort-select">
+        <select value={value} onChange={(event) => onChange(event.target.value as LargeExposureSortKey)}>
+          {sortOptions.map((option) => (
+            <option value={option.key} key={option.key}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown size={15} />
+      </label>
+    </section>
+  );
+}
+
 function SelectedFilterRow({
   filters,
   onRemove,
@@ -535,6 +571,7 @@ function CustomerResultList({
 
 function CustomerCard({ customer, onClick }: { customer: LargeExposureCustomer; onClick: () => void }) {
   const trendTone = customer.riskTrend === "风险下降" ? "green" : customer.riskTrend === "风险稳定" ? "stable" : "orange";
+  const trendSuffix = customer.riskTrend === "风险上行" ? " ↑" : customer.riskTrend === "风险下降" ? " ↓" : "";
 
   return (
     <button className="large-customer-card" type="button" onClick={onClick}>
@@ -546,12 +583,14 @@ function CustomerCard({ customer, onClick }: { customer: LargeExposureCustomer; 
           <h2>{customer.name}</h2>
           <p>客户编号：{customer.customerCode}</p>
         </div>
-        <ChevronRight size={20} />
+        <div className="large-card-trailing">
+          <span className={`large-risk-trend is-${trendTone}`}>{customer.riskTrend}{trendSuffix}</span>
+          <ChevronRight size={18} />
+        </div>
       </header>
       <div className="large-customer-pills">
         <span>{customer.managementClass}</span>
         <span>{customer.strategy}</span>
-        <span className={`is-${trendTone}`}>{customer.riskTrend}{customer.riskTrend === "风险上行" ? " ↑" : customer.riskTrend === "风险下降" ? " ↓" : ""}</span>
       </div>
       <div className="large-customer-metrics">
         <span>
@@ -569,7 +608,7 @@ function CustomerCard({ customer, onClick }: { customer: LargeExposureCustomer; 
       </div>
       <p className="large-customer-ai">
         <Sparkles size={16} />
-        <b>AI 判断：</b>
+        <b>风险摘要：</b>
         {customer.aiSummary}
       </p>
       <div className="large-tag-cloud">
@@ -648,7 +687,7 @@ function StatusMetric({
     <>
       <span className="large-core-label">
         <span>{label}</span>
-        <Info size={14} />
+        <Info size={16} />
       </span>
       <strong className={`large-core-value is-${tone}`}>
         <span>{value}</span>
@@ -709,6 +748,7 @@ function DetailTabs({ active, onChange }: { active: DetailTab; onChange: (tab: D
 function OverviewTab({ customer }: { customer: LargeExposureCustomer }) {
   return (
     <>
+      <CoreConclusionCard customer={customer} />
       <section className="large-section-card">
         <h2>风险概览</h2>
         <div className="large-overview-split">
@@ -750,6 +790,30 @@ function OverviewTab({ customer }: { customer: LargeExposureCustomer }) {
         ))}
       </section>
     </>
+  );
+}
+
+function CoreConclusionCard({ customer }: { customer: LargeExposureCustomer }) {
+  const mainRisk = customer.riskTrend === "风险下降" ? "行业景气度偏弱、融资成本压力仍需观察" : "行业景气度偏弱、融资成本上升与舆情变化";
+
+  return (
+    <section className="large-section-card large-conclusion-card">
+      <h2>核心结论</h2>
+      <div className="large-conclusion-list">
+        <p>
+          <span>当前策略</span>
+          <strong>{customer.strategy}</strong>
+        </p>
+        <p>
+          <span>主要风险</span>
+          <strong>{mainRisk}</strong>
+        </p>
+        <p>
+          <span>跟踪重点</span>
+          <strong>现金流、到期债务、持仓压降节奏</strong>
+        </p>
+      </div>
+    </section>
   );
 }
 
@@ -878,6 +942,8 @@ function InternalRiskTab({
         </div>
       </section>
 
+      <DeleveragingPlanCard customer={customer} />
+
       <section className="large-section-card">
         <header className="large-section-head">
           <h2>敞口结构分布</h2>
@@ -944,12 +1010,59 @@ function InternalRiskTab({
         </div>
       </section>
 
-      <AiBlock label="AI 内部风险解读" title="敞口规模较高，压降进度需跟踪" description="集团对该客户敞口规模较高，虽有压降但进度相对缓慢；债券久期偏长带来利率波动风险，建议重点跟踪压降进度与债券持仓风险。" icon={<Sparkles size={18} />} />
+      <AiBlock label="内部风险解读" title="敞口规模较高，压降进度需跟踪" description="集团对该客户敞口规模较高，虽有压降但进度相对缓慢；债券久期偏长带来利率波动风险，建议重点跟踪压降进度与债券持仓风险。" icon={<Sparkles size={18} />} />
     </>
   );
 }
 
+function DeleveragingPlanCard({ customer }: { customer: LargeExposureCustomer }) {
+  const actual = customer.holdingChangeYtd;
+  const isBehind = Math.abs(actual) < 10;
+
+  return (
+    <section className="large-section-card large-plan-card">
+      <header className="large-section-head">
+        <h2>压降计划 vs 实际</h2>
+        <span className={isBehind ? "is-orange" : "is-green"}>{isBehind ? "低于计划" : "进度正常"}</span>
+      </header>
+      <div className="large-plan-grid">
+        <article>
+          <span>计划压降</span>
+          <strong>-10.0%</strong>
+        </article>
+        <article>
+          <span>实际压降</span>
+          <strong className={actual < 0 ? "is-green" : "is-orange"}>{actual.toFixed(1)}%</strong>
+        </article>
+        <article>
+          <span>进度状态</span>
+          <strong className={isBehind ? "is-orange" : "is-green"}>{isBehind ? "低于计划" : "符合计划"}</strong>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+function ResonanceHintCard({ customer }: { customer: LargeExposureCustomer }) {
+  const fundingDirection = customer.financing.averageCostChange.startsWith("-") ? "有所下降" : "边际上行";
+  const holdingLevel = customer.holding >= 8 ? "仍处较高水平" : "处于可控区间";
+
+  return (
+    <section className="large-section-card large-resonance-card">
+      <h2>
+        <ShieldAlert size={18} />
+        内外部共振提示
+      </h2>
+      <p>
+        外部融资成本{fundingDirection}，集团持仓{holdingLevel}。建议结合舆情、到期债务和持仓压降节奏调整跟踪频率。
+      </p>
+    </section>
+  );
+}
+
 function ExternalRiskTab({ customer, onOpenSheet }: { customer: LargeExposureCustomer; onOpenSheet: (sheet: SheetKind) => void }) {
+  const externalView = getExternalRiskView(customer);
+
   return (
     <>
       <section className="large-section-card">
@@ -959,24 +1072,20 @@ function ExternalRiskTab({ customer, onOpenSheet }: { customer: LargeExposureCus
             <Info size={15} />
           </h2>
         </header>
-        <p className="large-section-subtitle">近 7 天外部风险信号 5 条，较上月增加 2 条</p>
+        <p className="large-section-subtitle">{externalView.summary}</p>
         <div className="large-external-scroll">
-          {[
-            ["负面舆情", "1", "较上月 +1", Megaphone],
-            ["重大公告", "1", "较上月 持平", FileText],
-            ["司法风险", "0", "较上月 持平", Gavel],
-            ["监管处罚", "0", "较上月 持平", Shield],
-            ["评级变动", "-", "较上月 持平", Building2],
-          ].map(([label, value, sub, Icon]) => (
-            <article key={label as string}>
-              {typeof Icon !== "string" ? <Icon size={17} /> : null}
-              <span>{label as string}</span>
-              <strong>{value as string}</strong>
-              <p>{sub as string}</p>
+          {externalView.signals.map(({ label, value, sub, Icon }) => (
+            <article key={label}>
+              <Icon size={17} />
+              <span>{label}</span>
+              <strong>{value}</strong>
+              <p>{sub}</p>
             </article>
           ))}
         </div>
       </section>
+
+      <ResonanceHintCard customer={customer} />
 
       <section className="large-section-card">
         <header className="large-section-head">
@@ -993,7 +1102,7 @@ function ExternalRiskTab({ customer, onOpenSheet }: { customer: LargeExposureCus
           <FinanceMetric label="经营现金流" value={customer.financialMetrics.cashFlow} delta="下降" tone="orange" />
         </div>
         <button className="large-ai-inline" type="button" onClick={() => onOpenSheet("finance")}>
-          <span><b>AI 解读：</b>客户盈利能力显著下滑，经营现金流转负，债务负担有所上升，短期财务压力加大。</span>
+          <span><b>风险解释：</b>客户盈利能力、现金流和债务负担共同决定短期财务压力，需要结合融资成本变化持续跟踪。</span>
           <em>查看财务详情 <ChevronRight size={14} /></em>
         </button>
       </section>
@@ -1037,14 +1146,14 @@ function ExternalRiskTab({ customer, onOpenSheet }: { customer: LargeExposureCus
           </h2>
           <button type="button" onClick={() => onOpenSheet("sentiment")}>查看全部舆情 <ChevronRight size={15} /></button>
         </header>
-        <p className="large-section-subtitle">近 7 日负面舆情 1 条，涉及：业绩下滑、债务压力</p>
+        <p className="large-section-subtitle">{externalView.sentiment.subtitle}</p>
         <button className="large-news-row" type="button" onClick={() => onOpenSheet("sentiment")}>
-          <strong>天合能源一季度净利同比下滑 35%，债务压力引关注</strong>
+          <strong>{externalView.sentiment.title}</strong>
           <p>
-            <span>2024-05-14 10:32</span>
+            <span>{externalView.sentiment.time}</span>
             <span>|</span>
-            <span>财联社</span>
-            <em>负面</em>
+            <span>{externalView.sentiment.source}</span>
+            <em>{externalView.sentiment.tag}</em>
           </p>
         </button>
       </section>
@@ -1089,14 +1198,16 @@ function ExternalRiskTab({ customer, onOpenSheet }: { customer: LargeExposureCus
   );
 }
 
-function ForecastTab({ onOpenSheet, onToast }: { onOpenSheet: (sheet: SheetKind) => void; onToast: (message: string) => void }) {
+function ForecastTab({ customer, onOpenSheet, onToast }: { customer: LargeExposureCustomer; onOpenSheet: (sheet: SheetKind) => void; onToast: (message: string) => void }) {
+  const forecastView = getForecastView(customer);
+
   return (
     <>
       <section className="large-section-card large-forecast-hero">
         <header className="large-section-head">
           <h2>
             <Sparkles size={20} />
-            AI 未来风险趋势判断
+            未来风险趋势判断
           </h2>
           <span>更新时间：2024-05-15</span>
         </header>
@@ -1105,8 +1216,8 @@ function ForecastTab({ onOpenSheet, onToast }: { onOpenSheet: (sheet: SheetKind)
             <TrendingUp size={58} />
           </div>
           <div>
-            <h3>未来 90 天风险趋势：<em>偏上行</em></h3>
-            <p>受盈利下滑、行业景气度低位及融资成本上升影响，该客户未来风险可能边际走高，建议维持重点跟踪，关注关键指标变化。</p>
+            <h3>未来 90 天风险趋势：<em>{forecastView.trend}</em></h3>
+            <p>{forecastView.description}</p>
           </div>
         </div>
         <div className="large-prob-grid">
@@ -1129,10 +1240,10 @@ function ForecastTab({ onOpenSheet, onToast }: { onOpenSheet: (sheet: SheetKind)
       <section className="large-section-card">
         <h2>风险升级触发条件</h2>
         <div className="large-trigger-list">
-          <TriggerRow icon={<BarChart3 size={18} />} title="盈利持续恶化" detail="连续两期净利润同比下滑超过 30%。" impact="中高影响" />
-          <TriggerRow icon={<CircleDollarSign size={18} />} title="融资成本显著上行" detail="平均债券利率上行超过 100BP。" impact="中高影响" />
-          <TriggerRow icon={<Megaphone size={18} />} title="重大负面舆情或司法事件" detail="出现重大负面舆情、诉讼、被执行等事件。" impact="高影响" />
-          <TriggerRow icon={<PieChart size={18} />} title="集团持仓压降不及预期" detail="未来两个季度持仓压降进度低于计划 15%。" impact="中影响" />
+          <TriggerRow icon={<BarChart3 size={18} />} title="盈利持续恶化" detail="连续两期净利润同比下滑超过 30%。" current={`最近一期 ${customer.financialMetrics.profitYoY}`} distance={forecastView.profitDistance} impact="中高影响" />
+          <TriggerRow icon={<CircleDollarSign size={18} />} title="融资成本显著上行" detail="平均债券利率上行超过 100BP。" current={`较去年 ${customer.financing.averageCostChange}`} distance={forecastView.fundingDistance} impact="中高影响" />
+          <TriggerRow icon={<Megaphone size={18} />} title="重大负面舆情或司法事件" detail="出现重大负面舆情、诉讼、被执行等事件。" current={forecastView.sentimentCurrent} distance={forecastView.sentimentDistance} impact="高影响" />
+          <TriggerRow icon={<PieChart size={18} />} title="集团持仓压降不及预期" detail="未来两个季度持仓压降进度低于计划 15%。" current={`实际 ${customer.holdingChangeYtd.toFixed(1)}%`} distance={forecastView.holdingDistance} impact="中影响" />
         </div>
       </section>
 
@@ -1140,7 +1251,7 @@ function ForecastTab({ onOpenSheet, onToast }: { onOpenSheet: (sheet: SheetKind)
         <header className="large-section-head">
           <h2>
             <Sparkles size={20} />
-            AI 建议与跟踪
+            建议与跟踪
           </h2>
           <span className="is-green">已加入跟踪（2 天前）</span>
         </header>
@@ -1218,13 +1329,14 @@ function getSheetContent(sheet: SheetKind, customer: LargeExposureCustomer, onTo
   }
 
   if (sheet === "sentiment") {
+    const sentiment = getSentimentView(customer);
     return {
       title: "舆情摘要",
       body: (
         <div className="large-sheet-stack">
-          <p className="large-sheet-copy">负面｜天合能源一季度净利同比下滑 35%，债务压力引关注。</p>
-          <SheetBlock title="来源与时间" items={["财联社", "2024-05-14 10:32"]} />
-          <SheetBlock title="AI 影响判断" items={["对评级趋势形成负面压力", "与盈利下滑、融资成本上行形成共振", "建议纳入未来 30 天舆情跟踪"]} tone="orange" />
+          <p className="large-sheet-copy">{sentiment.tag}｜{sentiment.title}。</p>
+          <SheetBlock title="来源与时间" items={[sentiment.source, sentiment.time]} />
+          <SheetBlock title="影响判断" items={sentiment.sheetImpacts} tone={sentiment.tag === "负面" ? "orange" : undefined} />
         </div>
       ),
     };
@@ -1233,7 +1345,7 @@ function getSheetContent(sheet: SheetKind, customer: LargeExposureCustomer, onTo
   if (sheet === "funding") {
     return {
       title: "融资成本解释",
-      body: <p className="large-sheet-copy">{customer.financing.bondRateRange} 为该客户近期债券利率区间，平均融资成本 {customer.financing.averageCost}，较去年 {customer.financing.averageCostChange}。AI 建议结合未来 6 个月到期债务 {customer.financing.dueDebtSixMonths} 持续跟踪再融资压力。</p>,
+      body: <p className="large-sheet-copy">{customer.financing.bondRateRange} 为该客户近期债券利率区间，平均融资成本 {customer.financing.averageCost}，较去年 {customer.financing.averageCostChange}。建议结合未来 6 个月到期债务 {customer.financing.dueDebtSixMonths} 持续跟踪再融资压力。</p>,
     };
   }
 
@@ -1287,7 +1399,7 @@ function getSheetContent(sheet: SheetKind, customer: LargeExposureCustomer, onTo
   if (sheet === "summary") {
     return {
       title: "30 秒领导汇报版",
-      body: <p className="large-sheet-copy">{customer.name}当前为{customer.managementClass}，策略为{customer.strategy}。集团持仓 {customer.holding.toFixed(1)} 亿元，较年初变化 {customer.holdingChangeYtd.toFixed(1)}%，综合风险分 {customer.riskScore}。AI 建议围绕财务、舆情、融资和压降进度设置跟踪动作。</p>,
+      body: <p className="large-sheet-copy">{customer.name}当前为{customer.managementClass}，策略为{customer.strategy}。集团持仓 {customer.holding.toFixed(1)} 亿元，较年初变化 {customer.holdingChangeYtd.toFixed(1)}%，综合风险分 {customer.riskScore}。建议围绕财务、舆情、融资和压降进度设置跟踪动作。</p>,
     };
   }
 
@@ -1438,13 +1550,19 @@ function ScenarioCard({
   );
 }
 
-function TriggerRow({ icon, title, detail, impact }: { icon: ReactNode; title: string; detail: string; impact: string }) {
+function TriggerRow({ icon, title, detail, current, distance, impact }: { icon: ReactNode; title: string; detail: string; current?: string; distance?: string; impact: string }) {
   return (
     <article className="large-trigger-row">
       <span>{icon}</span>
       <div>
         <h3>{title}</h3>
         <p>{detail}</p>
+        {current || distance ? (
+          <div className="large-trigger-meta">
+            {current ? <small>当前状态：{current}</small> : null}
+            {distance ? <small>距离触发：{distance}</small> : null}
+          </div>
+        ) : null}
       </div>
       <em>{impact}</em>
     </article>
@@ -1520,6 +1638,150 @@ function useToast(): [string | null, (message: string) => void] {
 
 function getDetailTab(tab: string | null): DetailTab {
   return detailTabs.some((item) => item.key === tab) ? (tab as DetailTab) : "overview";
+}
+
+function sortLargeExposureCustomers(customers: LargeExposureCustomer[], sortKey: LargeExposureSortKey) {
+  const trendWeight: Record<string, number> = { 风险上行: 3, 风险稳定: 2, 风险下降: 1 };
+  const updatedWeight = (value: string) => {
+    if (value.includes("小时")) {
+      return 4;
+    }
+    if (value.includes("1 天")) {
+      return 3;
+    }
+    if (value.includes("2 天")) {
+      return 2;
+    }
+    return 1;
+  };
+
+  return [...customers].sort((a, b) => {
+    if (sortKey === "holding") {
+      return b.holding - a.holding;
+    }
+    if (sortKey === "reduction") {
+      return b.holdingChangeYtd - a.holdingChangeYtd;
+    }
+    if (sortKey === "updated") {
+      return updatedWeight(b.updatedAt) - updatedWeight(a.updatedAt);
+    }
+    return (trendWeight[b.riskTrend] ?? 0) - (trendWeight[a.riskTrend] ?? 0) || b.riskScore - a.riskScore;
+  });
+}
+
+function getRiskExplanation(customer: LargeExposureCustomer) {
+  if (customer.riskTrend === "风险下降") {
+    return `该客户风险较上月小幅下降，主要因集团持仓持续压降、评级保持${customer.ratingTone}；但${customer.industry}景气度仍偏弱，仍需关注融资成本、现金流和到期债务变化。`;
+  }
+  if (customer.riskTrend === "风险稳定") {
+    return `该客户风险整体稳定，当前${customer.strategy}策略仍可维持。后续重点看现金流、融资成本和持仓压降节奏是否偏离计划。`;
+  }
+  return `该客户风险边际上行，主要受外部经营压力、融资成本和内部敞口压降节奏影响。建议复核${customer.strategy}策略，并提高财务与舆情跟踪频率。`;
+}
+
+function getExternalRiskView(customer: LargeExposureCustomer) {
+  const sentiment = getSentimentView(customer);
+  const hasNegative = sentiment.tag === "负面";
+  const hasRatingChange = customer.ratingTone.includes("下调") || customer.tags.some((tag) => tag.includes("评级下调"));
+  const announcementCount = customer.riskTrend === "风险上行" ? "1" : "0";
+  const signalCount = hasNegative ? 5 : customer.riskTrend === "风险下降" ? 2 : 3;
+
+  return {
+    summary: hasNegative
+      ? `近 7 天外部风险信号 ${signalCount} 条，负面舆情较上月增加`
+      : `近 7 天外部风险信号 ${signalCount} 条，未见新增重大负面舆情`,
+    sentiment,
+    signals: [
+      { label: "负面舆情", value: sentiment.count, sub: hasNegative ? `较上月 +${sentiment.count}` : "较上月 持平", Icon: Megaphone },
+      { label: "重大公告", value: announcementCount, sub: "较上月 持平", Icon: FileText },
+      { label: "司法风险", value: "0", sub: "较上月 持平", Icon: Gavel },
+      { label: "监管处罚", value: "0", sub: "较上月 持平", Icon: Shield },
+      { label: "评级变动", value: hasRatingChange ? "1" : "-", sub: hasRatingChange ? "近期下调" : "较上月 持平", Icon: Building2 },
+    ],
+  };
+}
+
+function getSentimentView(customer: LargeExposureCustomer) {
+  const hasNegative = customer.publicOpinion.includes("负面") || customer.tags.some((tag) => tag.includes("负面"));
+  const count = customer.publicOpinion.match(/\d+/)?.[0] ?? (hasNegative ? "1" : "0");
+
+  if (hasNegative) {
+    return {
+      count,
+      tag: "负面",
+      title: `${customer.name}经营承压与债务压力引关注`,
+      subtitle: `近 7 日负面舆情 ${count} 条，涉及：经营压力、债务压力`,
+      time: "2024-05-14 10:32",
+      source: "财联社",
+      sheetImpacts: ["对评级趋势形成压力", "与盈利或融资成本变化形成共振", "建议纳入未来 30 天舆情跟踪"],
+    };
+  }
+
+  return {
+    count: "0",
+    tag: "中性",
+    title: `${customer.name}经营与融资相关舆情保持平稳`,
+    subtitle: "近 7 日未见新增重大负面舆情，保持常规监测",
+    time: "2024-05-15 09:20",
+    source: "内部监测",
+    sheetImpacts: ["暂未发现新增重大负面事件", "继续观察行业景气度与融资环境", "按当前管理策略保持跟踪"],
+  };
+}
+
+function getForecastView(customer: LargeExposureCustomer) {
+  const profitChange = parseSignedNumber(customer.financialMetrics.profitYoY);
+  const costChange = parseSignedNumber(customer.financing.averageCostChange);
+  const hasNegativeSentiment = getSentimentView(customer).tag === "负面";
+  const holdingBehind = Math.abs(customer.holdingChangeYtd) < 10;
+
+  const trend = customer.riskTrend === "风险下降" ? "稳定偏改善" : customer.riskTrend === "风险稳定" ? "稳定观察" : "偏上行";
+  const description = customer.riskTrend === "风险下降"
+    ? "集团持仓持续压降、评级保持稳定，未来风险整体可控；但行业景气度和再融资环境仍需跟踪，防止改善趋势放缓。"
+    : customer.riskTrend === "风险稳定"
+      ? "当前风险未明显恶化，建议维持既定策略，重点观察融资成本、现金流和持仓压降节奏是否偏离计划。"
+      : "受盈利下滑、行业景气度低位及融资成本上升影响，该客户未来风险可能边际走高，建议维持重点跟踪，关注关键指标变化。";
+
+  return {
+    trend,
+    description,
+    profitDistance: profitChange <= -30 ? "已触发" : profitChange < 0 ? `差 ${(30 - Math.abs(profitChange)).toFixed(1)}pp` : "未触发",
+    fundingDistance: costChange >= 1 ? "已触发" : costChange > 0 ? `差 ${Math.round((1 - costChange) * 100)}BP` : "未触发",
+    sentimentCurrent: hasNegativeSentiment ? customer.publicOpinion : "近 7 日 0 条",
+    sentimentDistance: hasNegativeSentiment ? "需持续观察" : "未触发",
+    holdingDistance: holdingBehind ? "低于计划" : "符合计划",
+  };
+}
+
+function parseSignedNumber(value: string) {
+  const match = value.match(/[+-]?\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : 0;
+}
+
+function getShortTrend(riskTrend: string) {
+  return riskTrend.replace("风险", "");
+}
+
+function getRiskDrivers(customer: LargeExposureCustomer) {
+  if (customer.riskTrend === "风险下降") {
+    return "持仓压降、评级稳定";
+  }
+  if (customer.greylist || customer.publicOpinion.includes("负面")) {
+    return "舆情、融资成本";
+  }
+  if (customer.holdingChangeYtd > 0) {
+    return "持仓上升、融资压力";
+  }
+  return "融资成本、现金流";
+}
+
+function getAttentionLevel(customer: LargeExposureCustomer) {
+  if (customer.managementClass === "出险类" || customer.riskScore >= 75) {
+    return "高";
+  }
+  if (customer.managementClass === "重点管理类" || customer.riskScore >= 60) {
+    return "中高";
+  }
+  return "中";
 }
 
 function cloneFilters(filters: LargeExposureFilters): LargeExposureFilters {
