@@ -21,12 +21,56 @@ This repository is a mobile WebApp demo for an AI-native risk control assistant.
 
 Page files should compose UI and page flow. Put reusable UI in `src/components/`. Put complex data shaping or reusable logic in `src/data/`, `src/lib/`, or another suitable shared directory if introduced.
 
+## Product Intent
+
+The product should help users move through a complete risk-management loop:
+
+discover risk -> assess importance -> understand causes -> evaluate impact -> decide actions -> assign ownership and deadlines -> track outcomes -> report and review.
+
+Do not treat every screen as a dashboard. Each page should have a clear user, decision, and next action.
+
+Primary user perspectives include:
+
+- Executives: identify material changes, impact, decisions, and overdue actions.
+- Risk leaders: analyze, prioritize, escalate, assign, and supervise.
+- Risk specialists: verify evidence, investigate causes, execute actions, and track results.
+- Risk managers: prepare monitoring, follow-up, and reporting materials.
+
+Do not assume every role needs the same information density or interaction depth.
+
+## Business Content and Evidence
+
+- Treat user-provided production screenshots and confirmed business fields as important business inputs.
+- Preserving a field does not mean displaying it on the first screen. Fields may be summarized, grouped, folded, filtered, or moved into drill-down views.
+- Do not assume the current production layout or navigation is the target design.
+- Separate confirmed requirements, repository evidence, inferred needs, and unvalidated product hypotheses.
+- Mark unreadable or uncertain screenshot content as unknown instead of inventing values or relationships.
+- Do not remove, rename, or reinterpret established business fields without explaining the product and business impact.
+
+## AI Product Principles
+
+- Do not add AI merely to make a page appear AI-native.
+- Use AI when it materially reduces the cost of finding priorities, connecting evidence, explaining changes, preparing decisions, generating actions, or following up outcomes.
+- Prefer deterministic filters, sorting, rules, charts, and templates when they solve the problem more reliably.
+- AI outputs should expose supporting evidence, data time, relevant changes, assumptions, and uncertainty when applicable.
+- Clearly distinguish source facts, rule-based results, model predictions, AI inference, AI recommendations, and human-confirmed decisions.
+- Page-level AI should explain the current object or metric. The global copilot should support cross-module analysis and follow-up. Proactive alerts should require explicit triggers.
+- Every proposed AI capability should identify its user, trigger, input data, output, user action, human confirmation point, and follow-up path.
+
+## Domain Consistency
+
+- Keep risk level, risk trend, warning status, limit status, management strategy, action status, and tracking priority as distinct concepts.
+- Keep customer values and statuses consistent across overview, list, detail, tracking, and report pages.
+- Do not invent business metrics solely to fill visual space.
+- New mock fields must support a real page decision or be explicitly identified as a demo hypothesis.
+- AI conclusions and recommended actions must be consistent with the underlying mock indicators, events, and risk status.
+
 ## UI / Interaction Style
 
 - Keep the warm cream / beige background, soft orange gradients, orange emphasis, large rounded cards, and low-contrast shadows.
 - Optimize for mobile executive scanning, not desktop dashboards.
 - Avoid dense tables unless explicitly requested.
-- Preserve the existing bottom AI input and global AI copilot interaction model.
+- Preserve the bottom AI input and global copilot as the current interaction baseline unless the task explicitly redesigns them. Do not add isolated AI widgets that duplicate the global copilot without a clear page-specific purpose.
 - Horizontal chips may scroll, but should avoid visible scrollbars.
 
 ## Mobile Readability System
@@ -57,6 +101,20 @@ Avoid dense tablet-style layouts, tiny text, awkward label wrapping, multi-line 
 - Primary check: `npm run build`
 - Dev server: `npm run dev -- --host 127.0.0.1`
 - For visual work, verify the relevant route in the in-app browser when practical.
+- Use a viewport around 390 x 844 as the primary mobile reference.
+- Check first-screen priority, horizontal overflow, back navigation, tabs, filters, sheets, and drill-down paths.
+- Confirm that the bottom AI input does not cover page content and inspect the browser console for errors.
+- For routing or deployment work, verify HashRouter navigation, refresh behavior, and the GitHub Pages base path.
+
+## Product Review Workflow
+
+Before redesigning from screenshots or business references:
+
+1. Inventory the visible fields, states, actions, and page relationships.
+2. Separate confirmed facts from assumptions and open questions.
+3. Identify whether each issue is caused by data, information architecture, workflow, business definition, or AI capability.
+4. Define the user decision and next action for the page.
+5. Implement only after the intended content hierarchy and workflow are clear.
 
 ## Codex Workflow
 
