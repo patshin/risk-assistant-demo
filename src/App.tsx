@@ -5,14 +5,16 @@ import { GlobalCopilotProvider } from "./components/GlobalCopilot";
 import {
   DefaultAssetsPage,
   DefaultCustomerListPage,
-  PrewarningAssetsPage,
   WarningAssetDetailPage,
-  WarningCustomerDetailPage,
   WarningCustomerListPage,
-  WarningMigrationsPage,
   WarningOverviewPage,
   WarningTrackingDetailPage,
 } from "./features/warning-default/WarningDefaultPages";
+import {
+  PrewarningCustomerRoutePage,
+  PrewarningMigrationPage,
+  PrewarningOverviewPage,
+} from "./features/warning-default/PrewarningReferencePages";
 import { BriefDetailPage } from "./pages/BriefDetailPage";
 import { CreditRiskPage, RiskMigrationTrendPage } from "./pages/CreditRiskPage";
 import { CreditCustomerListPage } from "./pages/CreditCustomerListPage";
@@ -40,12 +42,12 @@ export default function App() {
           <Route path="/macro" element={<MacroRiskPage />} />
           <Route path="/credit" element={<CreditRiskPage />} />
           <Route path="/credit/warning" element={<WarningOverviewPage />} />
-          <Route path="/credit/warning/prewarnings" element={<PrewarningAssetsPage />} />
-          <Route path="/credit/warning/prewarnings/migrations" element={<WarningMigrationsPage />} />
+          <Route path="/credit/warning/prewarnings" element={<PrewarningOverviewPage />} />
+          <Route path="/credit/warning/prewarnings/migrations" element={<PrewarningMigrationPage />} />
           <Route path="/credit/warning/prewarnings/customers" element={<WarningCustomerListPage />} />
           <Route path="/credit/warning/defaults" element={<DefaultAssetsPage />} />
           <Route path="/credit/warning/defaults/customers" element={<DefaultCustomerListPage />} />
-          <Route path="/credit/warning/customers/:customerId" element={<WarningCustomerDetailPage />} />
+          <Route path="/credit/warning/customers/:customerId" element={<PrewarningCustomerRoutePage />} />
           <Route path="/credit/warning/assets/:assetId" element={<WarningAssetDetailPage />} />
           <Route path="/credit/customers" element={<CreditCustomerListPage />} />
           <Route path="/credit/large-exposure" element={<Navigate to="/credit?tab=large" replace />} />

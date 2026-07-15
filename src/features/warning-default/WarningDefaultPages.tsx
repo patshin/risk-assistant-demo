@@ -76,12 +76,6 @@ export function WarningOverviewPage() {
   const defaultMetric = period === "month" ? warningOverview.monthlyDefault : warningOverview.dailyDefault;
   const definitionOpen = searchParams.get("sheet") === "metrics" || searchParams.get("sheet") === "definition";
 
-  const openDefinition = () => {
-    const next = new URLSearchParams(searchParams);
-    next.set("sheet", "metrics");
-    setSearchParams(next, { state: { ...(location.state ?? {}), warningSheet: true } });
-  };
-
   const closeDefinition = useCallback(() => {
     if ((location.state as { warningSheet?: boolean } | null)?.warningSheet) {
       navigate(-1);
@@ -137,18 +131,10 @@ export function WarningOverviewPage() {
         </div>
         <div className="warning-data-scope">
           <span>数据截至 {WARNING_DATA_AS_OF}</span>
-          <button type="button" onClick={openDefinition}>法人客户去重口径 <ChevronRight size={14} /></button>
         </div>
       </WarningSection>
 
-      <WarningSection
-        title="存量风险"
-        action={
-          <button type="button" className="warning-inline-action" onClick={openDefinition}>
-            查看口径 <ChevronRight size={15} />
-          </button>
-        }
-      >
+      <WarningSection title="存量风险">
         <div className="warning-stock-grid">
           <RouteLink to="/credit/warning/prewarnings" className="warning-stock-card">
             <span>预警资产</span>

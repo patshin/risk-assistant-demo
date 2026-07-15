@@ -1,6 +1,7 @@
 import type {
   CorporateCustomer,
   CustomerListFilter,
+  DataProvenance,
   DefaultAsset,
   MemberCompany,
   ProvenanceLabel,
@@ -35,9 +36,17 @@ export const warningLevelStructure: WarningLevelSnapshot[] = [
   { level: "level1", label: "一级预警", amountBillion: 860, share: 25.74, monthChangeBillion: -4, color: "#e6a729" },
 ];
 
-export type PrewarningSelectorKey = "group" | "bank" | "leasing" | "life" | "trust" | "all";
+export type PrewarningSelectorKey = "group" | "bank" | "leasing" | "life" | "trust";
 export type PrewarningTrendDirection = "up" | "down";
 export type PrewarningMigrationStage = "level1" | "level2" | "major" | "defaulted";
+
+export type PrewarningOverviewMetric = {
+  label: string;
+  value: string;
+  unit: string;
+  note: string;
+  tone?: PrewarningTrendDirection;
+};
 
 export type PrewarningPeriodSnapshot = {
   key: "previous" | "current";
@@ -52,6 +61,18 @@ export type PrewarningPeriodSnapshot = {
   }>;
 };
 
+export type PrewarningMonthlyStructureSnapshot = {
+  key: "01-31" | "02-28" | "03-31" | "04-30" | "05-31" | "06-24";
+  label: string;
+  totalAmountBillion: number;
+  provenance: DataProvenance;
+  levels: ReadonlyArray<{
+    level: "level1" | "level2" | "major";
+    label: string;
+    amountBillion: number;
+  }>;
+};
+
 export type PrewarningMemberCompanyRecord = {
   key: "bank" | "realEstate" | "assetManagement" | "leasing" | "insurance" | "trust" | "consumerFinance" | "supplyChainFinance";
   label: string;
@@ -63,7 +84,7 @@ export type PrewarningMemberCompanyRecord = {
   iconTone: "orange" | "blue" | "amber" | "green" | "purple" | "cyan";
 };
 
-export type PrewarningLeasingCustomer = {
+export type PrewarningCorporateCustomer = {
   customerId: string;
   name: string;
   groupName: string;
@@ -115,6 +136,82 @@ const prewarningPeriodSnapshots: PrewarningPeriodSnapshot[] = [
   },
 ];
 
+const prewarningMonthlyStructureSnapshots: PrewarningMonthlyStructureSnapshot[] = [
+  {
+    key: "01-31",
+    label: "01-31",
+    totalAmountBillion: 2780,
+    provenance: "demo",
+    levels: [
+      { level: "level1", label: "一级预警", amountBillion: 700 },
+      { level: "level2", label: "二级预警", amountBillion: 1120 },
+      { level: "major", label: "重大预警", amountBillion: 960 },
+    ],
+  },
+  {
+    key: "02-28",
+    label: "02-28",
+    totalAmountBillion: 2912,
+    provenance: "demo",
+    levels: [
+      { level: "level1", label: "一级预警", amountBillion: 747 },
+      { level: "level2", label: "二级预警", amountBillion: 1170 },
+      { level: "major", label: "重大预警", amountBillion: 995 },
+    ],
+  },
+  {
+    key: "03-31",
+    label: "03-31",
+    totalAmountBillion: 3105,
+    provenance: "demo",
+    levels: [
+      { level: "level1", label: "一级预警", amountBillion: 800 },
+      { level: "level2", label: "二级预警", amountBillion: 1245 },
+      { level: "major", label: "重大预警", amountBillion: 1060 },
+    ],
+  },
+  {
+    key: "04-30",
+    label: "04-30",
+    totalAmountBillion: 3231,
+    provenance: "demo",
+    levels: [
+      { level: "level1", label: "一级预警", amountBillion: 851 },
+      { level: "level2", label: "二级预警", amountBillion: 1280 },
+      { level: "major", label: "重大预警", amountBillion: 1100 },
+    ],
+  },
+  {
+    key: "05-31",
+    label: "05-31",
+    totalAmountBillion: 3358,
+    provenance: "confirmed",
+    levels: [
+      { level: "level1", label: "一级预警", amountBillion: 864 },
+      { level: "level2", label: "二级预警", amountBillion: 1323 },
+      { level: "major", label: "重大预警", amountBillion: 1171 },
+    ],
+  },
+  {
+    key: "06-24",
+    label: "06-24",
+    totalAmountBillion: 3342,
+    provenance: "confirmed",
+    levels: [
+      { level: "level1", label: "一级预警", amountBillion: 860 },
+      { level: "level2", label: "二级预警", amountBillion: 1320 },
+      { level: "major", label: "重大预警", amountBillion: 1162 },
+    ],
+  },
+];
+
+for (const period of prewarningMonthlyStructureSnapshots) {
+  const levelsTotal = period.levels.reduce((total, level) => total + level.amountBillion, 0);
+  if (levelsTotal !== period.totalAmountBillion) {
+    throw new Error(`预警结构数据校验失败：${period.label} 分项合计 ${levelsTotal} 与总额 ${period.totalAmountBillion} 不一致`);
+  }
+}
+
 const prewarningMemberCompanies: PrewarningMemberCompanyRecord[] = [
   { key: "bank", label: "银行", warningAssetBillion: 140.02, warningCustomerCount: 3842, majorWarningBillion: 217.82, monthChangePercent: 8.42, trend: "up", iconTone: "orange" },
   { key: "realEstate", label: "不动产", warningAssetBillion: 59.11, warningCustomerCount: 1286, majorWarningBillion: 86.35, monthChangePercent: 3.21, trend: "down", iconTone: "blue" },
@@ -126,7 +223,7 @@ const prewarningMemberCompanies: PrewarningMemberCompanyRecord[] = [
   { key: "supplyChainFinance", label: "供应链金融", warningAssetBillion: 6.21, warningCustomerCount: 196, monthChangePercent: 1.62, trend: "down", iconTone: "orange" },
 ];
 
-const prewarningLeasingCustomers: PrewarningLeasingCustomer[] = [
+const prewarningLeasingCustomers: PrewarningCorporateCustomer[] = [
   { customerId: "huadong-city-construction", name: "华东城建集团有限公司", groupName: "城建发展集团", warningDate: "2026-06-21", warningAmountBillion: 68.5, riskLevel: "major" },
   { customerId: "zhongyuan-equipment", name: "中原装备制造有限公司", groupName: "中原工业集团", warningDate: "2026-06-19", warningAmountBillion: 42.3, riskLevel: "level2" },
   { customerId: "bohai-energy-chemical", name: "渤海能源化工有限公司", groupName: "渤海控股集团", warningDate: "2026-06-18", warningAmountBillion: 28.7, riskLevel: "level1" },
@@ -155,13 +252,13 @@ export const prewarningReferenceData = {
   },
   grades: warningLevelStructure,
   periods: prewarningPeriodSnapshots,
+  structurePeriods: prewarningMonthlyStructureSnapshots,
   selectorOptions: [
     { key: "group", label: "集团汇总" },
     { key: "bank", label: "银行" },
     { key: "leasing", label: "租赁" },
     { key: "life", label: "寿险" },
     { key: "trust", label: "信托" },
-    { key: "all", label: "全部成员公司" },
   ] as Array<{ key: PrewarningSelectorKey; label: string }>,
   memberCompanies: prewarningMemberCompanies,
   topMemberKeys: ["bank", "realEstate", "assetManagement"] as const,
@@ -185,6 +282,72 @@ export function getPrewarningReferenceCustomer(customerId: string) {
   if (leasingCustomer) return { kind: "leasing" as const, customer: leasingCustomer };
   const migrationCustomer = prewarningMigrationCustomers.find((customer) => customer.customerId === customerId);
   return migrationCustomer ? { kind: "migration" as const, customer: migrationCustomer } : undefined;
+}
+
+export function getPrewarningMemberOverview(selector: Exclude<PrewarningSelectorKey, "group" | "leasing">) {
+  const memberKey: Record<typeof selector, PrewarningMemberCompanyRecord["key"]> = {
+    bank: "bank",
+    life: "insurance",
+    trust: "trust",
+  };
+  const member = prewarningMemberCompanies.find((record) => record.key === memberKey[selector]);
+  if (!member) return undefined;
+
+  const directionLabel = member.trend === "up" ? "上升" : "下降";
+  const sign = member.trend === "up" ? "+" : "-";
+  const metrics: PrewarningOverviewMetric[] = [
+    {
+      label: "预警资产规模",
+      value: formatAmount(member.warningAssetBillion),
+      unit: "亿元",
+      note: `占集团 ${formatAmount((member.warningAssetBillion / warningOverview.warningStock.amountBillion) * 100, 1)}%`,
+    },
+    {
+      label: "预警客户数",
+      value: formatAmount(member.warningCustomerCount, 0),
+      unit: "户",
+      note: `数据截至 ${WARNING_DATA_AS_OF.slice(5)}`,
+    },
+    {
+      label: "较上月末",
+      value: `${sign}${formatAmount(member.monthChangePercent)}`,
+      unit: "%",
+      note: `预警资产${directionLabel}`,
+      tone: member.trend,
+    },
+  ];
+
+  return { label: selector === "life" ? "寿险" : member.label, metrics };
+}
+
+export function getPrewarningSelectedMemberView(selector: Exclude<PrewarningSelectorKey, "group">) {
+  if (selector === "leasing") {
+    const overview = prewarningReferenceData.leasing.overview;
+    const metrics: PrewarningOverviewMetric[] = [
+      {
+        label: "预警资产规模",
+        value: formatAmount(overview.assetAmountBillion, 0),
+        unit: "亿元",
+        note: `占集团 ${formatAmount(overview.groupSharePercent)}%`,
+      },
+      {
+        label: "预警客户数",
+        value: formatAmount(overview.customerCount, 0),
+        unit: "户",
+        note: `较上月末下降${formatAmount(Math.abs(overview.monthCustomerChange), 0)}户`,
+      },
+      {
+        label: "重大预警金额",
+        value: formatAmount(overview.majorWarningBillion, 0),
+        unit: "亿元",
+        note: `占租赁预警 ${formatAmount(overview.leasingWarningSharePercent)}%`,
+      },
+    ];
+    return { label: "租赁", metrics, customers: prewarningLeasingCustomers };
+  }
+
+  const overview = getPrewarningMemberOverview(selector);
+  return overview ? { ...overview, customers: [] as PrewarningCorporateCustomer[] } : undefined;
 }
 
 export const customers: Record<string, CorporateCustomer> = {

@@ -18,7 +18,7 @@ import { useCopilot, type InvestmentSourceContext } from "../GlobalCopilot";
 import {
   categoryLabels,
   eventStateLabels,
-  formatMetric,
+  formatMetricParts,
   formatNumber,
   investmentRiskSnapshot,
   riskLevelLabels,
@@ -157,7 +157,12 @@ export function StatusBadge({
 }
 
 export function MetricValue({ metric, signed = false, compact = false }: { metric: Metric; signed?: boolean; compact?: boolean }) {
-  return <strong className={compact ? "investment-number is-compact" : "investment-number"}>{formatMetric(metric, signed)}</strong>;
+  const formatted = formatMetricParts(metric, signed);
+  return (
+    <strong className={compact ? "investment-number is-compact" : "investment-number"}>
+      {formatted.value}{formatted.unit ? <em>{formatted.unit}</em> : null}
+    </strong>
+  );
 }
 
 export function MetricTile({

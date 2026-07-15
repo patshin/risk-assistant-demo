@@ -93,6 +93,7 @@
 }
 
 .investment-meta-row > span,
+.investment-meta-row > button,
 .investment-chip-row button {
   display: inline-flex;
   flex: 0 0 auto;
@@ -108,6 +109,10 @@
   font-size: 12px;
   font-weight: 720;
   white-space: nowrap;
+}
+
+.investment-meta-row > button {
+  font-family: inherit;
 }
 
 .investment-meta-row > span.is-reviewed {
@@ -210,6 +215,15 @@
 .investment-number.is-compact {
   white-space: nowrap;
   font-size: clamp(18px, 5.7vw, 24px);
+}
+
+.investment-number > em {
+  margin-left: 3px;
+  color: #8b7868;
+  font-size: 0.5em;
+  font-style: normal;
+  font-weight: 650;
+  letter-spacing: 0;
 }
 
 .investment-scope-caption,
@@ -2855,7 +2869,7 @@
 
 .cii-overview__hero-copy > strong {
   color: #ed5d00;
-  font-size: clamp(46px, 14vw, 61px);
+  font-size: clamp(48px, 11.5vw, 50px);
   font-weight: 780;
   line-height: 0.96;
   letter-spacing: -0.055em;
@@ -2940,7 +2954,7 @@
 .cii-metric-card > strong {
   min-width: 0;
   color: #181410;
-  font-size: clamp(29px, 9.5vw, 40px);
+  font-size: clamp(29px, 7vw, 30px);
   font-weight: 760;
   line-height: 1;
   letter-spacing: -0.045em;
@@ -3534,7 +3548,7 @@
   }
 
   .cii-metric-card > strong {
-    font-size: 31px;
+    font-size: 29px;
   }
 
   .cii-attention {

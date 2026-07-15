@@ -35,8 +35,7 @@ export function InvestmentOverviewPage() {
   return (
     <InvestmentPage title="投资风险" subtitle={`${snapshot.periodLabel} · 集团口径`} snapshot={snapshot} backTo="/">
       <div className="investment-meta-row" aria-label="数据状态">
-        <span>{snapshot.defaultCompareBasis === "previousMonth" ? "较上月" : "较上年末"}</span>
-        <span>{snapshot.groupName}</span>
+        <button type="button">最新数据</button>
         <span className={snapshot.dataStatus === "reviewed" ? "is-reviewed" : ""}><ShieldCheck size={14} />{snapshot.dataStatus === "reviewed" ? "已复核" : "待复核"}</span>
       </div>
 

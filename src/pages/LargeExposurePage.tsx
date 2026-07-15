@@ -16,6 +16,7 @@ import {
   FileText,
   Filter,
   Gavel,
+  Eye,
   Info,
   LineChart,
   Megaphone,
@@ -73,6 +74,7 @@ const detailTabs = [
 type DetailTab = (typeof detailTabs)[number]["key"];
 type LargeExposureSortKey = (typeof sortOptions)[number]["key"];
 type HoldingRange = keyof typeof holdingTrendData;
+type RiskMonitorStatus = "triggered" | "watch" | "below-plan" | "clear" | "on-plan";
 type LargeExposureFilters = Record<LargeExposureFilterKey, string[]>;
 type SheetKind =
   | "filter"
@@ -579,7 +581,7 @@ function CustomerCard({ customer, onClick }: { customer: LargeExposureCustomer; 
         <span className="large-customer-avatar" aria-hidden="true">
           <Building2 size={24} />
         </span>
-        <div>
+        <div className="large-customer-identity">
           <h2>{customer.name}</h2>
           <p>客户编号：{customer.customerCode}</p>
         </div>
@@ -608,8 +610,10 @@ function CustomerCard({ customer, onClick }: { customer: LargeExposureCustomer; 
       </div>
       <p className="large-customer-ai">
         <Sparkles size={16} />
-        <b>风险摘要：</b>
-        {customer.aiSummary}
+        <span className="large-customer-ai-content">
+          <b>风险摘要：</b>
+          <span>{customer.aiSummary}</span>
+        </span>
       </p>
       <div className="large-tag-cloud">
         {customer.tags.map((tag) => (
@@ -617,10 +621,8 @@ function CustomerCard({ customer, onClick }: { customer: LargeExposureCustomer; 
         ))}
       </div>
       <footer>
-        <span>
-          <CalendarClock size={15} />
-          最新信号：{customer.latestSignal}
-        </span>
+        <CalendarClock size={15} />
+        <span>最新信号：{customer.latestSignal}</span>
         <time>{customer.updatedAt}</time>
       </footer>
     </button>
@@ -714,7 +716,7 @@ function StrategyCard({ customer, onMock }: { customer: LargeExposureCustomer; o
       <div className="large-card-icon" aria-hidden="true">
         <ShieldAlert size={26} />
       </div>
-      <div>
+      <div className="large-strategy-body">
         <div className="large-strategy-lines">
           <p>
             客户策略：<strong>{customer.strategy}</strong>
@@ -1200,6 +1202,67 @@ function ExternalRiskTab({ customer, onOpenSheet }: { customer: LargeExposureCus
 
 function ForecastTab({ customer, onOpenSheet, onToast }: { customer: LargeExposureCustomer; onOpenSheet: (sheet: SheetKind) => void; onToast: (message: string) => void }) {
   const forecastView = getForecastView(customer);
+  const holdingChange = `${customer.holdingChangeYtd > 0 ? "+" : ""}${customer.holdingChangeYtd.toFixed(1)}%`;
+  const monitorItems: Array<{
+    icon: ReactNode;
+    title: string;
+    description: string;
+    criterion: string;
+    status: RiskMonitorStatus;
+    evidence: string;
+    impact: string;
+  }> = [
+    {
+      icon: <BarChart3 size={20} />,
+      title: "盈利持续恶化",
+      description: "净利润同比下滑，盈利能力持续承压",
+      criterion: "连续两期净利润同比下滑超过 30%",
+      status: forecastView.profitStatus,
+      evidence: forecastView.profitStatus === "triggered"
+        ? `最近一期 ${customer.financialMetrics.profitYoY}，超过阈值`
+        : forecastView.profitStatus === "watch"
+          ? `最近一期 ${customer.financialMetrics.profitYoY}，需观察连续性`
+          : `最近一期 ${customer.financialMetrics.profitYoY}，未见明显恶化`,
+      impact: "中高影响",
+    },
+    {
+      icon: <CircleDollarSign size={20} />,
+      title: "融资成本显著上行",
+      description: "债券利率持续抬升，融资成本明显增加",
+      criterion: "平均债券利率上行超过 100BP",
+      status: forecastView.fundingStatus,
+      evidence: forecastView.fundingStatus === "triggered"
+        ? `较去年 ${customer.financing.averageCostChange}，超过阈值`
+        : forecastView.fundingStatus === "watch"
+          ? `较去年 ${customer.financing.averageCostChange}，继续观察`
+          : `较去年 ${customer.financing.averageCostChange}，未见明显上行`,
+      impact: "中高影响",
+    },
+    {
+      icon: <Megaphone size={20} />,
+      title: "重大负面舆情或司法事件",
+      description: "关注重大负面舆情、诉讼或被执行等风险事件",
+      criterion: "新增重大负面舆情或司法事件时重点复核",
+      status: forecastView.sentimentStatus,
+      evidence: forecastView.sentimentCurrent,
+      impact: "高影响",
+    },
+    {
+      icon: <PieChart size={20} />,
+      title: "集团持仓压降不及预期",
+      description: "持仓压降进度低于计划目标",
+      criterion: "持仓压降进度低于计划 15%",
+      status: forecastView.holdingStatus,
+      evidence: `较年初 ${holdingChange}`,
+      impact: "中影响",
+    },
+  ];
+  const monitorSummary = [
+    { label: "项监测", value: monitorItems.length, icon: <ChartNoAxesCombined size={17} /> },
+    { label: "项已触发", value: monitorItems.filter((item) => item.status === "triggered").length, icon: <Bell size={17} /> },
+    { label: "项持续观察", value: monitorItems.filter((item) => item.status === "watch").length, icon: <Eye size={17} /> },
+    { label: "项低于计划", value: monitorItems.filter((item) => item.status === "below-plan").length, icon: <TrendingDown size={17} /> },
+  ];
 
   return (
     <>
@@ -1237,13 +1300,27 @@ function ForecastTab({ customer, onOpenSheet, onToast }: { customer: LargeExposu
         </div>
       </section>
 
-      <section className="large-section-card">
-        <h2>风险升级触发条件</h2>
-        <div className="large-trigger-list">
-          <TriggerRow icon={<BarChart3 size={18} />} title="盈利持续恶化" detail="连续两期净利润同比下滑超过 30%。" current={`最近一期 ${customer.financialMetrics.profitYoY}`} distance={forecastView.profitDistance} impact="中高影响" />
-          <TriggerRow icon={<CircleDollarSign size={18} />} title="融资成本显著上行" detail="平均债券利率上行超过 100BP。" current={`较去年 ${customer.financing.averageCostChange}`} distance={forecastView.fundingDistance} impact="中高影响" />
-          <TriggerRow icon={<Megaphone size={18} />} title="重大负面舆情或司法事件" detail="出现重大负面舆情、诉讼、被执行等事件。" current={forecastView.sentimentCurrent} distance={forecastView.sentimentDistance} impact="高影响" />
-          <TriggerRow icon={<PieChart size={18} />} title="集团持仓压降不及预期" detail="未来两个季度持仓压降进度低于计划 15%。" current={`实际 ${customer.holdingChangeYtd.toFixed(1)}%`} distance={forecastView.holdingDistance} impact="中影响" />
+      <section className="large-section-card large-risk-monitor-card">
+        <header className="large-monitor-header">
+          <div>
+            <h2>风险升级监测</h2>
+            <span className="large-monitor-help"><Info size={14} />监测说明</span>
+          </div>
+          <p>监测可能推动客户风险继续上行的关键因素</p>
+        </header>
+        <div className="large-monitor-summary" aria-label="风险升级监测汇总">
+          {monitorSummary.map((item) => (
+            <div key={item.label}>
+              <span aria-hidden="true">{item.icon}</span>
+              <strong>{item.value}</strong>
+              <small>{item.label}</small>
+            </div>
+          ))}
+        </div>
+        <div className="large-monitor-list">
+          {monitorItems.map((item) => (
+            <RiskMonitorRow key={item.title} {...item} />
+          ))}
         </div>
       </section>
 
@@ -1550,21 +1627,46 @@ function ScenarioCard({
   );
 }
 
-function TriggerRow({ icon, title, detail, current, distance, impact }: { icon: ReactNode; title: string; detail: string; current?: string; distance?: string; impact: string }) {
+const riskMonitorStatusLabels: Record<RiskMonitorStatus, string> = {
+  triggered: "已触发",
+  watch: "持续观察",
+  "below-plan": "低于计划",
+  clear: "未触发",
+  "on-plan": "符合计划",
+};
+
+function RiskMonitorRow({ icon, title, description, criterion, status, evidence, impact }: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  criterion: string;
+  status: RiskMonitorStatus;
+  evidence: string;
+  impact: string;
+}) {
   return (
-    <article className="large-trigger-row">
-      <span>{icon}</span>
-      <div>
-        <h3>{title}</h3>
-        <p>{detail}</p>
-        {current || distance ? (
-          <div className="large-trigger-meta">
-            {current ? <small>当前状态：{current}</small> : null}
-            {distance ? <small>距离触发：{distance}</small> : null}
+    <article className="large-monitor-row">
+      <span className="large-monitor-icon" aria-hidden="true">{icon}</span>
+      <div className="large-monitor-content">
+        <div className="large-monitor-title-row">
+          <h3>{title}</h3>
+          <em>{impact}</em>
+        </div>
+        <p>{description}</p>
+        <dl className="large-monitor-fields">
+          <div>
+            <dt>升级标准</dt>
+            <dd>{criterion}</dd>
           </div>
-        ) : null}
+          <div>
+            <dt>当前判断</dt>
+            <dd className={`is-${status}`}>
+              <strong>{riskMonitorStatusLabels[status]}</strong>
+              <span>{evidence}</span>
+            </dd>
+          </div>
+        </dl>
       </div>
-      <em>{impact}</em>
     </article>
   );
 }
@@ -1732,7 +1834,11 @@ function getForecastView(customer: LargeExposureCustomer) {
   const profitChange = parseSignedNumber(customer.financialMetrics.profitYoY);
   const costChange = parseSignedNumber(customer.financing.averageCostChange);
   const hasNegativeSentiment = getSentimentView(customer).tag === "负面";
-  const holdingBehind = Math.abs(customer.holdingChangeYtd) < 10;
+  const holdingBehind = customer.holdingChangeYtd > -15;
+  const profitStatus: RiskMonitorStatus = profitChange <= -30 ? "triggered" : profitChange < 0 ? "watch" : "clear";
+  const fundingStatus: RiskMonitorStatus = costChange >= 1 ? "triggered" : costChange > 0 ? "watch" : "clear";
+  const sentimentStatus: RiskMonitorStatus = hasNegativeSentiment ? "watch" : "clear";
+  const holdingStatus: RiskMonitorStatus = holdingBehind ? "below-plan" : "on-plan";
 
   const trend = customer.riskTrend === "风险下降" ? "稳定偏改善" : customer.riskTrend === "风险稳定" ? "稳定观察" : "偏上行";
   const description = customer.riskTrend === "风险下降"
@@ -1744,11 +1850,11 @@ function getForecastView(customer: LargeExposureCustomer) {
   return {
     trend,
     description,
-    profitDistance: profitChange <= -30 ? "已触发" : profitChange < 0 ? `差 ${(30 - Math.abs(profitChange)).toFixed(1)}pp` : "未触发",
-    fundingDistance: costChange >= 1 ? "已触发" : costChange > 0 ? `差 ${Math.round((1 - costChange) * 100)}BP` : "未触发",
+    profitStatus,
+    fundingStatus,
     sentimentCurrent: hasNegativeSentiment ? customer.publicOpinion : "近 7 日 0 条",
-    sentimentDistance: hasNegativeSentiment ? "需持续观察" : "未触发",
-    holdingDistance: holdingBehind ? "低于计划" : "符合计划",
+    sentimentStatus,
+    holdingStatus,
   };
 }
 

@@ -501,13 +501,18 @@ export function formatNumber(value: number | null, precision = 0) {
   return new Intl.NumberFormat("zh-CN", { minimumFractionDigits: precision, maximumFractionDigits: precision }).format(value);
 }
 
-export function formatMetric(metric: Metric, signed = false) {
-  if (metric.value === null) return "—";
+export function formatMetricParts(metric: Metric, signed = false) {
+  if (metric.value === null) return { value: "—", unit: "" };
   const sign = signed && metric.value > 0 ? "+" : "";
   if (metric.unit === "亿元" && Math.abs(metric.value) >= 40000) {
-    return `${sign}${formatNumber(metric.value / 10000, 2)}万亿元`;
+    return { value: `${sign}${formatNumber(metric.value / 10000, 2)}`, unit: "万亿元" };
   }
-  return `${sign}${formatNumber(metric.value, metric.precision)}${metric.unit}`;
+  return { value: `${sign}${formatNumber(metric.value, metric.precision)}`, unit: metric.unit };
+}
+
+export function formatMetric(metric: Metric, signed = false) {
+  const formatted = formatMetricParts(metric, signed);
+  return `${formatted.value}${formatted.unit}`;
 }
 
 export function metricDelta(metric: Metric, basis: MetricCompareBasis) {
