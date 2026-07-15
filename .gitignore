@@ -5,6 +5,10 @@ node_modules/
 dist/
 build/
 coverage/
+artifacts/
+design-references/warning-default/prototype/QA_REPORT.md
+design-references/warning-default/prototype/screenshots-contact.png
+design-references/warning-default/prototype/screenshots/
 
 # Environment files and secrets
 .env

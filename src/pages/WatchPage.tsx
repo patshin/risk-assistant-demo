@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
@@ -21,6 +21,20 @@ import {
 } from "lucide-react";
 import { BottomAskBar, PageHeader, PillTag, useCopilot } from "../components";
 import { aiAlertNewsItems } from "../data/mockRisk";
+import { getInvestmentDemoState } from "../lib/investmentRiskStore";
+
+type WatchTrackingItem = {
+  title: string;
+  status: string;
+  days: string;
+  update: string;
+  ai: string;
+  latest: string;
+  actions: string[];
+  icon: typeof Building2;
+  category: "宏观" | "信用" | "投资";
+  route?: string;
+};
 
 const todayItems = [
   {
@@ -61,7 +75,7 @@ const summaryStats = [
   { label: "已完成事项", value: "9", change: "较昨日 +3", icon: CheckCircle2 },
 ];
 
-const trackingItems = [
+const trackingItems: WatchTrackingItem[] = [
   {
     title: "地产链条风险",
     status: "升温中",
@@ -71,6 +85,7 @@ const trackingItems = [
     latest: "新增 4 家相关客户预警，1 条舆情信号升温。",
     actions: ["查看详情", "生成排查清单"],
     icon: Building2,
+    category: "信用",
   },
   {
     title: "债市波动风险",
@@ -81,6 +96,7 @@ const trackingItems = [
     latest: "10Y 利率上行至 2.35%，信用利差扩大 9bp。",
     actions: ["查看压力影响", "更新汇报"],
     icon: BarChart3,
+    category: "投资",
   },
   {
     title: "某省城投再融资风险",
@@ -91,6 +107,7 @@ const trackingItems = [
     latest: "相关平台融资成本上升，需关注关联客户敞口。",
     actions: ["查看客户", "生成排查清单"],
     icon: Landmark,
+    category: "信用",
   },
   {
     title: "重点客户舆情风险",
@@ -101,6 +118,7 @@ const trackingItems = [
     latest: "新增 2 条负面舆情，涉及地产与建筑客户。",
     actions: ["查看客户", "继续追问"],
     icon: Megaphone,
+    category: "信用",
   },
   {
     title: "组合久期风险",
@@ -111,6 +129,7 @@ const trackingItems = [
     latest: "压力测试结果较昨日改善，组合回撤风险小幅回落。",
     actions: ["查看压力测试", "生成简报"],
     icon: PieChart,
+    category: "投资",
   },
 ];
 
@@ -316,6 +335,36 @@ export function TrackingListPage() {
   const navigate = useNavigate();
   const { openCopilot } = useCopilot();
   const [filter, setFilter] = useState("全部");
+  const [investmentTasks, setInvestmentTasks] = useState(() => getInvestmentDemoState().trackingTasks);
+
+  useEffect(() => {
+    const refresh = () => setInvestmentTasks(getInvestmentDemoState().trackingTasks);
+    window.addEventListener("investment-store-change", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("investment-store-change", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
+  const investmentTrackingItems: WatchTrackingItem[] = investmentTasks.map((task) => ({
+    title: task.title,
+    status: task.status === "pending" ? "待确认" : "跟踪中",
+    days: "来源：投资风险",
+    update: `下次更新 ${task.nextUpdateAt}`,
+    ai: "基线指标来自已复核投资快照，等待下一期数据确认连续性。",
+    latest: "已绑定 CII 收益、VaR 与相关成员证据。",
+    actions: ["查看详情", "更新汇报"],
+    icon: PieChart,
+    category: "投资",
+    route: `/watch/tracking/${task.id}`,
+  }));
+  const allTrackingItems = [...investmentTrackingItems, ...trackingItems];
+  const filteredTrackingItems = filter === "全部"
+    ? allTrackingItems
+    : filter === "宏观" || filter === "信用" || filter === "投资"
+      ? allTrackingItems.filter((item) => item.category === filter)
+      : allTrackingItems.filter((item) => item.status === filter);
 
   return (
     <div className="page watch-page">
@@ -331,7 +380,7 @@ export function TrackingListPage() {
         />
         <AISummary
           title="AI 跟踪总览"
-          body="当前跟踪 6 项重点风险，其中 2 项升温、3 项观察中、1 项趋稳。建议优先关注地产链条与债市波动。"
+          body={`当前跟踪 ${allTrackingItems.length} 项重点风险。投资事项已与来源快照、基线指标和汇报材料关联。`}
           chips={[
             { label: "升温中 2", icon: Flame },
             { label: "观察中 3", icon: RadioTower },
@@ -341,7 +390,7 @@ export function TrackingListPage() {
         />
         <ChipRow items={trackingFilters} active={filter} onChange={setFilter} />
         <div className="tracking-card-list">
-          {trackingItems.map((item) => (
+          {filteredTrackingItems.map((item) => (
             <TrackingCard key={item.title} item={item} />
           ))}
         </div>
@@ -430,8 +479,9 @@ function TodayFocusCard({ item }: { item: (typeof todayItems)[number] }) {
   );
 }
 
-function TrackingCard({ item }: { item: (typeof trackingItems)[number] }) {
+function TrackingCard({ item }: { item: WatchTrackingItem }) {
   const { openCopilot } = useCopilot();
+  const navigate = useNavigate();
 
   return (
     <article className="tracking-risk-card glass-card">
@@ -448,7 +498,15 @@ function TrackingCard({ item }: { item: (typeof trackingItems)[number] }) {
         <p><Flame size={14} /> 最新变化：{item.latest}</p>
         <div className="watch-action-row">
           {item.actions.map((action) => (
-            <button type="button" key={action} onClick={() => openCopilot(getWatchActionOptions(action))}>
+            <button
+              type="button"
+              key={action}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (item.route && action.includes("详情")) navigate(item.route);
+                else openCopilot(getWatchActionOptions(action));
+              }}
+            >
               {action}
               <ChevronRight size={15} />
             </button>

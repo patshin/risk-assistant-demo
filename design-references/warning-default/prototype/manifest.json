@@ -1,0 +1,40 @@
+{
+  "prototype": "index.html",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "screenshots": [
+    "01-warning-overview-top.png",
+    "02-warning-overview-lists.png",
+    "03-prewarning-assets.png",
+    "04-warning-migration.png",
+    "05-major-warning-customers.png",
+    "06-major-warning-filter.png",
+    "07-warning-customer-detail.png",
+    "08-warning-asset-detail.png",
+    "09-default-assets.png",
+    "10-default-customers.png",
+    "11-default-filter.png",
+    "12-default-customer-detail.png",
+    "13-default-asset-detail-top.png",
+    "14-default-asset-detail-fields.png",
+    "15-tracking-sheet.png",
+    "16-tracking-detail.png",
+    "17-report-sheet.png",
+    "18-copilot.png",
+    "19-empty-state.png",
+    "20-error-state.png"
+  ],
+  "qa": {
+    "interactive_flow": "passed",
+    "console_errors": 0,
+    "responsive_viewports": [
+      "375x812",
+      "390x844",
+      "393x852",
+      "414x896",
+      "430x932"
+    ]
+  }
+}

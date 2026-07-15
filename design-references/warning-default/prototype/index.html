@@ -1,0 +1,2818 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff7ec" />
+  <title>预警出险高保真原型</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --font-sans: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+      --font-size-page-title: 22px;
+      --font-size-section: 17px;
+      --font-size-card-title: 16px;
+      --font-size-body: 14px;
+      --font-size-secondary: 13px;
+      --font-size-caption: 12px;
+      --font-size-label: 11px;
+      --line-page-title: 28px;
+      --line-section: 24px;
+      --line-card-title: 22px;
+      --line-body: 21px;
+      --line-secondary: 19px;
+      --line-caption: 17px;
+
+      --color-bg: #fff7ec;
+      --color-bg-soft: #fdf7ef;
+      --color-surface: #ffffff;
+      --color-surface-warm: #fffcf7;
+      --color-surface-muted: #fff8f0;
+      --color-text: #1f1b16;
+      --color-text-soft: #7a7168;
+      --color-text-muted: #9a8f84;
+      --color-border: #f3e3d1;
+      --color-divider: rgba(226, 203, 177, .68);
+      --color-orange: #ff6a00;
+      --color-orange-strong: #f97316;
+      --color-orange-soft: #ffe8d2;
+      --color-orange-softer: #fff0de;
+      --color-success: #719a4a;
+      --color-success-soft: #edf5df;
+      --color-warning: #d58a16;
+      --color-warning-soft: #fff0c9;
+      --color-danger: #e85c23;
+      --color-danger-soft: #ffe5d7;
+      --color-default: #c94631;
+      --color-default-soft: #fbe5df;
+      --color-major: #c6481d;
+      --color-major-soft: #ffe5d7;
+      --color-level2: #b75400;
+      --color-level2-soft: #ffe8d2;
+      --color-level1: #8c6200;
+      --color-level1-soft: #fff0c9;
+      --color-overlay: rgba(44, 35, 28, .34);
+      --color-focus: #ff7a1a;
+
+      --space-1: 4px;
+      --space-2: 6px;
+      --space-3: 8px;
+      --space-4: 10px;
+      --space-5: 12px;
+      --space-6: 14px;
+      --space-7: 16px;
+      --space-8: 20px;
+      --space-9: 24px;
+      --space-10: 32px;
+
+      --radius-sm: 12px;
+      --radius-md: 18px;
+      --radius-lg: 22px;
+      --radius-xl: 28px;
+      --radius-pill: 999px;
+      --radius-sheet: 26px;
+
+      --shadow-card: 0 12px 30px rgba(116, 72, 26, .08);
+      --shadow-soft: 0 18px 48px rgba(150, 92, 34, .12);
+      --shadow-float: 0 20px 54px rgba(73, 45, 16, .18);
+
+      --page-max: 430px;
+      --page-padding: 16px;
+      --header-height: 60px;
+      --touch-target: 44px;
+      --button-height: 48px;
+      --bottom-ask-height: 60px;
+      --bottom-reserve: 104px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: #f4ede3; }
+    body {
+      min-width: 320px;
+      min-height: 100%;
+      margin: 0;
+      color: var(--color-text);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255, 191, 122, .24), transparent 35%),
+        linear-gradient(115deg, #fffaf1 0%, #f7efe6 50%, #fff6e9 100%);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .48; }
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3, p { margin: 0; }
+    [hidden] { display: none !important; }
+    :focus-visible {
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    .app-shell {
+      position: relative;
+      width: min(100%, var(--page-max));
+      height: 100dvh;
+      min-height: 100dvh;
+      margin: 0 auto;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-width: none;
+      background:
+        radial-gradient(circle at 76% 6%, rgba(255, 190, 119, .14), transparent 23%),
+        linear-gradient(180deg, #fff9f0 0%, #fff5e8 58%, #fdf8f0 100%);
+      box-shadow: 0 0 0 1px rgba(243, 227, 209, .76), 0 30px 80px rgba(94, 66, 39, .10);
+      -webkit-overflow-scrolling: touch;
+    }
+    .app-shell::-webkit-scrollbar { display: none; }
+
+    .page {
+      min-height: 100dvh;
+      padding: 0 var(--page-padding) calc(var(--bottom-reserve) + var(--safe-bottom));
+    }
+    .page.no-ask { padding-bottom: calc(28px + var(--safe-bottom)); }
+    .page-content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-7);
+      padding-top: var(--space-2);
+    }
+
+    .page-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: var(--touch-target) minmax(0, 1fr) var(--touch-target);
+      align-items: center;
+      min-height: var(--header-height);
+      margin: 0 calc(var(--page-padding) * -1);
+      padding: 8px var(--page-padding) 6px;
+      background: linear-gradient(180deg, rgba(255, 248, 238, .98) 72%, rgba(255, 248, 238, 0));
+    }
+    .page-header h1 {
+      overflow: hidden;
+      margin: 0;
+      font-size: var(--font-size-page-title);
+      font-weight: 700;
+      line-height: var(--line-page-title);
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .icon-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--touch-target);
+      height: var(--touch-target);
+      min-width: var(--touch-target);
+      border: 1px solid rgba(243, 227, 209, .92);
+      border-radius: var(--radius-pill);
+      color: #6b5542;
+      background: rgba(255, 252, 247, .82);
+      box-shadow: 0 8px 20px rgba(116, 72, 26, .07);
+      font-size: 24px;
+      line-height: 1;
+    }
+    .icon-button.icon-small { font-size: 18px; }
+    .icon-button.is-plain { border-color: transparent; background: transparent; box-shadow: none; }
+
+    .credit-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      min-height: 48px;
+      border-bottom: 1px solid rgba(243, 227, 209, .9);
+    }
+    .credit-tabs button {
+      position: relative;
+      min-width: 0;
+      border: 0;
+      color: var(--color-text-muted);
+      background: transparent;
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 22px;
+      white-space: nowrap;
+    }
+    .credit-tabs button.is-active { color: var(--color-orange); }
+    .credit-tabs button.is-active::after {
+      position: absolute;
+      right: calc(50% - 18px);
+      bottom: -1px;
+      width: 36px;
+      height: 3px;
+      border-radius: var(--radius-pill);
+      background: var(--color-orange);
+      content: "";
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-5);
+      min-width: 0;
+    }
+    .section-heading h2 {
+      min-width: 0;
+      color: var(--color-text);
+      font-size: var(--font-size-section);
+      font-weight: 700;
+      line-height: var(--line-section);
+    }
+    .section-heading .section-action {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      min-height: 32px;
+      border: 0;
+      padding: 0;
+      color: var(--color-text-soft);
+      background: transparent;
+      font-size: var(--font-size-secondary);
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .card {
+      border: 1px solid rgba(243, 227, 209, .92);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 252, 247, .94);
+      box-shadow: var(--shadow-card);
+    }
+    .card-pad { padding: var(--space-7); }
+    .card-pad-compact { padding: var(--space-6); }
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      padding: var(--space-7);
+      background:
+        radial-gradient(circle at 88% 6%, rgba(255, 173, 93, .18), transparent 36%),
+        rgba(255, 252, 247, .95);
+      box-shadow: var(--shadow-card);
+      border: 1px solid rgba(243, 227, 209, .92);
+    }
+    .hero-card::after {
+      position: absolute;
+      right: -46px;
+      bottom: -54px;
+      width: 154px;
+      height: 154px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 174, 94, .13), transparent 68%);
+      content: "";
+      pointer-events: none;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+    .metric-card {
+      display: flex;
+      min-width: 0;
+      min-height: 126px;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: var(--space-7);
+      text-align: left;
+    }
+    .metric-card .metric-label {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--color-text-soft);
+      font-size: var(--font-size-secondary);
+      font-weight: 650;
+      line-height: var(--line-secondary);
+    }
+    .metric-card .metric-value {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-1);
+      margin-top: var(--space-5);
+      color: var(--color-orange);
+      white-space: nowrap;
+    }
+    .metric-card .metric-value strong {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 32px;
+    }
+    .metric-card .metric-value span {
+      font-size: 14px;
+      font-weight: 650;
+    }
+    .metric-card .metric-meta {
+      margin-top: var(--space-2);
+      color: var(--color-text-soft);
+      font-size: var(--font-size-secondary);
+      line-height: var(--line-secondary);
+    }
+    .metric-card.tone-major .metric-value { color: var(--color-major); }
+    .metric-card.tone-default .metric-value { color: var(--color-default); }
+    .metric-card.tone-neutral .metric-value { color: var(--color-orange); }
+
+    .data-scope-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      color: var(--color-text-muted);
+      font-size: var(--font-size-caption);
+      line-height: var(--line-caption);
+    }
+    .data-scope-row button {
+      border: 0;
+      padding: 0;
+      color: var(--color-text-soft);
+      background: transparent;
+      font-weight: 650;
+    }
+
+    .grade-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+    .grade-card {
+      min-width: 0;
+      min-height: 108px;
+      border: 1px solid rgba(243, 227, 209, .92);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      background: rgba(255, 252, 247, .94);
+      box-shadow: 0 9px 24px rgba(116, 72, 26, .06);
+      text-align: left;
+    }
+    .grade-card .grade-label {
+      overflow: hidden;
+      color: var(--color-text-soft);
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 17px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .grade-card .grade-value {
+      margin-top: var(--space-4);
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 25px;
+      white-space: nowrap;
+    }
+    .grade-card .grade-change {
+      margin-top: var(--space-2);
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 17px;
+      white-space: nowrap;
+    }
+    .grade-card.major .grade-value { color: var(--color-major); }
+    .grade-card.level2 .grade-value { color: var(--color-orange); }
+    .grade-card.level1 .grade-value { color: var(--color-warning); }
+    .trend-down { color: var(--color-success); }
+    .trend-up { color: var(--color-danger); }
+    .trend-stable { color: var(--color-text-muted); }
+
+    .segmented {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(58px, auto));
+      gap: 2px;
+      min-height: 40px;
+      border: 1px solid rgba(243, 227, 209, .92);
+      border-radius: var(--radius-pill);
+      padding: 3px;
+      background: rgba(255, 252, 247, .84);
+    }
+    .segmented button {
+      min-height: 32px;
+      border: 0;
+      border-radius: var(--radius-pill);
+      padding: 0 15px;
+      color: var(--color-text-soft);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .segmented button.is-active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--color-orange), #ff9542);
+      box-shadow: 0 7px 16px rgba(255, 106, 0, .20);
+    }
+
+    .structure-card { padding: var(--space-7); }
+    .structure-bar {
+      display: flex;
+      overflow: hidden;
+      width: 100%;
+      height: 12px;
+      margin-top: var(--space-6);
+      border-radius: var(--radius-pill);
+      background: #f5eadb;
+    }
+    .structure-bar span { min-width: 6px; height: 100%; }
+    .structure-bar .major { background: var(--color-major); }
+    .structure-bar .level2 { background: var(--color-orange); }
+    .structure-bar .level1 { background: var(--color-warning); }
+    .structure-legend {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+    .structure-legend div {
+      min-width: 0;
+      text-align: center;
+    }
+    .structure-legend span {
+      display: block;
+      color: var(--color-text-soft);
+      font-size: 12px;
+      line-height: 17px;
+    }
+    .structure-legend strong {
+      display: block;
+      margin-top: var(--space-1);
+      font-size: 16px;
+      line-height: 22px;
+      white-space: nowrap;
+    }
+    .structure-legend em {
+      display: block;
+      margin-top: 2px;
+      color: var(--color-text-soft);
+      font-size: 11px;
+      font-style: normal;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+
+    .risk-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .risk-list-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-5);
+      min-height: 100px;
+      padding: var(--space-6);
+      border: 1px solid rgba(243, 227, 209, .92);
+      border-radius: var(--radius-md);
+      background: rgba(255, 252, 247, .94);
+      box-shadow: 0 9px 24px rgba(116, 72, 26, .06);
+      text-align: left;
+    }
+    .risk-list-item.is-clickable { cursor: pointer; }
+    .risk-list-item.is-hidden { display: none; }
+    .risk-list-main { min-width: 0; }
+    .risk-list-name {
+      display: -webkit-box;
+      overflow: hidden;
+      color: var(--color-text);
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 21px;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+    .risk-list-group {
+      overflow: hidden;
+      margin-top: var(--space-1);
+      color: var(--color-text-muted);
+      font-size: 12px;
+      line-height: 17px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .risk-list-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+    .risk-list-date {
+      margin-top: var(--space-3);
+      color: var(--color-text-muted);
+      font-size: 11px;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+    .risk-list-amount {
+      align-self: center;
+      color: var(--color-orange);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .risk-list-amount strong {
+      display: block;
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 23px;
+    }
+    .risk-list-amount span {
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-pill);
+      padding: 0 9px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+    .tag-major { color: var(--color-major); background: var(--color-major-soft); }
+    .tag-default { color: var(--color-default); background: var(--color-default-soft); }
+    .tag-level2 { color: var(--color-level2); background: var(--color-level2-soft); }
+    .tag-level1 { color: var(--color-level1); background: var(--color-level1-soft); }
+    .tag-tracking { color: #4f712b; background: var(--color-success-soft); }
+    .tag-neutral { color: var(--color-text-soft); background: #f6eee4; }
+    .tag-demo { color: #8c6b4e; background: #fff3e5; border-color: #f3dcc4; }
+    .tag-fact { color: #4f712b; background: var(--color-success-soft); }
+
+    .chip-row {
+      display: flex;
+      gap: var(--space-3);
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      min-height: 34px;
+      border: 1px solid rgba(243, 227, 209, .95);
+      border-radius: var(--radius-pill);
+      padding: 0 12px;
+      color: var(--color-text-soft);
+      background: rgba(255, 252, 247, .88);
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .chip.is-active {
+      color: var(--color-orange);
+      border-color: rgba(255, 106, 0, .26);
+      background: var(--color-orange-softer);
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--touch-target);
+      gap: var(--space-3);
+      align-items: center;
+    }
+    .search-field {
+      display: flex;
+      align-items: center;
+      min-height: var(--touch-target);
+      border: 1px solid rgba(243, 227, 209, .95);
+      border-radius: var(--radius-pill);
+      padding: 0 14px;
+      background: rgba(255, 252, 247, .92);
+    }
+    .search-field span { color: var(--color-text-muted); margin-right: 8px; }
+    .search-field input {
+      min-width: 0;
+      width: 100%;
+      border: 0;
+      outline: 0;
+      color: var(--color-text);
+      background: transparent;
+      font-size: 13px;
+    }
+    .search-field input::placeholder { color: var(--color-text-muted); }
+
+    .customer-hero { min-height: 198px; }
+    .hero-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+    }
+    .hero-date {
+      color: var(--color-text-muted);
+      font-size: 11px;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+    .customer-title {
+      display: -webkit-box;
+      overflow: hidden;
+      margin-top: var(--space-4);
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 28px;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+    .customer-group {
+      display: -webkit-box;
+      overflow: hidden;
+      margin-top: var(--space-2);
+      color: var(--color-text-soft);
+      font-size: 13px;
+      line-height: 19px;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+    .hero-facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+      margin-top: var(--space-6);
+    }
+    .hero-fact {
+      min-width: 0;
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      background: rgba(255, 248, 240, .78);
+    }
+    .hero-fact span {
+      display: block;
+      color: var(--color-text-muted);
+      font-size: 11px;
+      line-height: 16px;
+    }
+    .hero-fact strong {
+      display: block;
+      overflow: hidden;
+      margin-top: var(--space-2);
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 21px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .hero-fact strong.emphasis { color: var(--color-orange); font-size: 20px; line-height: 24px; }
+
+    .fact-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+    .fact-item {
+      min-width: 0;
+      min-height: 92px;
+      border: 1px solid rgba(243, 227, 209, .88);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      background: var(--color-surface-muted);
+    }
+    .fact-item.span-2 { grid-column: 1 / -1; }
+    .fact-item span {
+      display: block;
+      color: var(--color-text-muted);
+      font-size: 11px;
+      line-height: 16px;
+    }
+    .fact-item strong {
+      display: -webkit-box;
+      overflow: hidden;
+      margin-top: var(--space-2);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 21px;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+    .fact-item.span-2 strong { -webkit-line-clamp: 4; }
+
+    .risk-asset-card {
+      display: flex;
+      min-height: 168px;
+      flex-direction: column;
+      gap: var(--space-4);
+      padding: var(--space-6);
+    }
+    .asset-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-4);
+    }
+    .asset-card-head h3 {
+      display: -webkit-box;
+      overflow: hidden;
+      min-width: 0;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 21px;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+    .asset-card-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+    .asset-card-meta div { min-width: 0; }
+    .asset-card-meta span {
+      display: block;
+      color: var(--color-text-muted);
+      font-size: 11px;
+      line-height: 16px;
+    }
+    .asset-card-meta strong {
+      display: block;
+      overflow: hidden;
+      margin-top: 2px;
+      font-size: 13px;
+      line-height: 19px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .asset-card-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin-top: auto;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      min-height: var(--button-height);
+      border-radius: var(--radius-pill);
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 20px;
+      white-space: nowrap;
+    }
+    .button-primary {
+      border: 0;
+      color: #fffaf5;
+      background: linear-gradient(135deg, var(--color-orange), #ff9542);
+      box-shadow: 0 12px 26px rgba(255, 106, 0, .22);
+    }
+    .button-secondary {
+      border: 1px solid rgba(255, 106, 0, .30);
+      color: var(--color-orange);
+      background: rgba(255, 250, 245, .92);
+    }
+    .button-quiet {
+      border: 0;
+      color: var(--color-text-soft);
+      background: #f4ece2;
+    }
+    .button-full { width: 100%; }
+
+    .key-value-card { overflow: hidden; }
+    .key-value-row {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: var(--space-5);
+      align-items: start;
+      min-height: 44px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-divider);
+    }
+    .key-value-row:last-child { border-bottom: 0; }
+    .key-value-row dt {
+      color: var(--color-text-muted);
+      font-size: 12px;
+      line-height: 18px;
+    }
+    .key-value-row dd {
+      min-width: 0;
+      margin: 0;
+      color: var(--color-text);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 20px;
+      overflow-wrap: anywhere;
+    }
+    .key-value-row dd.emphasis { color: var(--color-orange); font-weight: 700; }
+
+    .timeline-card { padding: var(--space-7); }
+    .timeline {
+      display: flex;
+      flex-direction: column;
+    }
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 66px 18px minmax(0, 1fr);
+      gap: var(--space-3);
+      min-height: 62px;
+    }
+    .timeline-date {
+      color: var(--color-text-muted);
+      font-size: 11px;
+      line-height: 17px;
+    }
+    .timeline-axis { position: relative; }
+    .timeline-axis::after {
+      position: absolute;
+      top: 12px;
+      bottom: -4px;
+      left: 8px;
+      width: 1px;
+      background: #eedbc8;
+      content: "";
+    }
+    .timeline-item:last-child .timeline-axis::after { display: none; }
+    .timeline-dot {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 9px;
+      height: 9px;
+      margin: 4px auto 0;
+      border: 2px solid #fff8ee;
+      border-radius: 50%;
+      background: var(--color-orange);
+      box-shadow: 0 0 0 2px var(--color-orange-soft);
+    }
+    .timeline-item.is-default .timeline-dot { background: var(--color-default); box-shadow: 0 0 0 2px var(--color-default-soft); }
+    .timeline-content strong {
+      display: block;
+      font-size: 13px;
+      line-height: 19px;
+    }
+    .timeline-content p {
+      margin-top: 3px;
+      color: var(--color-text-soft);
+      font-size: 12px;
+      line-height: 18px;
+    }
+
+    .compare-chart-card { min-height: 220px; padding: var(--space-7); }
+    .compare-chart {
+      display: grid;
+      grid-template-columns: repeat(2, 78px);
+      justify-content: center;
+      gap: 54px;
+      height: 150px;
+      margin-top: var(--space-5);
+      align-items: end;
+    }
+    .compare-column-wrap {
+      display: flex;
+      height: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-3);
+    }
+    .compare-column {
+      display: flex;
+      overflow: hidden;
+      width: 54px;
+      height: 112px;
+      flex-direction: column-reverse;
+      justify-content: flex-start;
+      border-radius: 10px 10px 5px 5px;
+      background: #f5eadb;
+      box-shadow: inset 0 0 0 1px rgba(226,203,177,.5);
+    }
+    .compare-column span { display: block; width: 100%; }
+    .compare-column .major { background: var(--color-major); }
+    .compare-column .level2 { background: var(--color-orange); }
+    .compare-column .level1 { background: var(--color-warning); }
+    .compare-label {
+      text-align: center;
+      font-size: 11px;
+      line-height: 16px;
+    }
+    .compare-label strong { display: block; font-size: 13px; line-height: 18px; }
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px 12px;
+      margin-top: var(--space-4);
+      color: var(--color-text-soft);
+      font-size: 11px;
+      line-height: 16px;
+    }
+    .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .trend-card { min-height: 212px; padding: var(--space-7); }
+    .trend-chart {
+      position: relative;
+      height: 120px;
+      margin-top: var(--space-5);
+      border-bottom: 1px solid #ead8c5;
+      background:
+        linear-gradient(to bottom, transparent 24%, rgba(226,203,177,.32) 25%, transparent 26%),
+        linear-gradient(to bottom, transparent 49%, rgba(226,203,177,.32) 50%, transparent 51%),
+        linear-gradient(to bottom, transparent 74%, rgba(226,203,177,.32) 75%, transparent 76%);
+    }
+    .trend-chart svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .trend-axis-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: var(--space-2);
+      color: var(--color-text-muted);
+      font-size: 10px;
+      line-height: 15px;
+    }
+    .sr-only {
+      position: absolute !important;
+      overflow: hidden !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      border: 0 !important;
+      clip: rect(0,0,0,0) !important;
+      white-space: nowrap !important;
+    }
+
+    .notice-card {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-6);
+      border: 1px solid #f1dcc4;
+      border-radius: var(--radius-md);
+      background: #fff6eb;
+      color: #6e5744;
+      font-size: 12px;
+      line-height: 18px;
+    }
+    .notice-card strong { color: var(--color-orange); }
+
+    .empty-state, .error-state {
+      display: flex;
+      min-height: 240px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-4);
+      padding: var(--space-9);
+      text-align: center;
+    }
+    .state-icon {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      color: var(--color-orange);
+      background: var(--color-orange-softer);
+      font-size: 26px;
+    }
+    .empty-state h3, .error-state h3 { font-size: 16px; line-height: 22px; }
+    .empty-state p, .error-state p { color: var(--color-text-soft); font-size: 13px; line-height: 20px; }
+
+    .skeleton {
+      position: relative;
+      overflow: hidden;
+      background: #f4eadf;
+    }
+    .skeleton::after {
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.66), transparent);
+      animation: shimmer 1.35s infinite;
+      content: "";
+    }
+    .skeleton-line { height: 12px; border-radius: var(--radius-pill); }
+    .skeleton-card { min-height: 100px; border-radius: var(--radius-md); }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+
+    .bottom-ask {
+      position: fixed;
+      z-index: 30;
+      right: 50%;
+      bottom: calc(12px + var(--safe-bottom));
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 52px;
+      gap: var(--space-3);
+      width: min(calc(100vw - 28px), 402px);
+      min-height: var(--bottom-ask-height);
+      transform: translateX(50%);
+      padding: 6px;
+      border: 1px solid rgba(243, 227, 209, .94);
+      border-radius: var(--radius-pill);
+      background: rgba(255, 252, 247, .96);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+    }
+    .bottom-ask__input {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: var(--space-3);
+      border: 0;
+      border-radius: var(--radius-pill);
+      padding: 0 12px;
+      color: var(--color-text-muted);
+      background: transparent;
+      text-align: left;
+    }
+    .bottom-ask__input .bot-mark {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      color: var(--color-orange);
+      background: var(--color-orange-softer);
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .bottom-ask__input .placeholder {
+      overflow: hidden;
+      min-width: 0;
+      flex: 1;
+      font-size: 13px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .bottom-ask__plus {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 50%;
+      color: #fff;
+      background: linear-gradient(135deg, var(--color-orange), #ff963e);
+      box-shadow: 0 10px 22px rgba(255,106,0,.22);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .overlay {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding: 0;
+      background: var(--color-overlay);
+    }
+    .overlay-backdrop {
+      position: absolute;
+      inset: 0;
+      border: 0;
+      background: transparent;
+    }
+    .sheet {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      width: min(100%, var(--page-max));
+      max-height: 74dvh;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+      background: #fffbf5;
+      box-shadow: var(--shadow-float);
+    }
+    .sheet-handle {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      width: 36px;
+      height: 4px;
+      border-radius: var(--radius-pill);
+      background: #dcc9b5;
+      transform: translateX(-50%);
+    }
+    .sheet-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--touch-target);
+      gap: var(--space-4);
+      align-items: center;
+      padding: 24px var(--space-7) 12px;
+      border-bottom: 1px solid rgba(243, 227, 209, .88);
+    }
+    .sheet-header h2 { font-size: 20px; font-weight: 700; line-height: 27px; }
+    .sheet-header p { margin-top: 2px; color: var(--color-text-muted); font-size: 12px; line-height: 18px; }
+    .sheet-body {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: var(--space-7);
+    }
+    .sheet-footer {
+      display: grid;
+      grid-template-columns: minmax(96px, .8fr) minmax(0, 1.8fr);
+      gap: var(--space-3);
+      padding: 12px var(--space-7) calc(12px + var(--safe-bottom));
+      border-top: 1px solid rgba(243, 227, 209, .88);
+      background: rgba(255, 251, 245, .98);
+    }
+    .sheet-section + .sheet-section { margin-top: var(--space-8); }
+    .sheet-section h3 { font-size: 14px; font-weight: 700; line-height: 20px; }
+    .option-wrap { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
+    .option-chip {
+      min-height: 34px;
+      border: 1px solid rgba(243, 227, 209, .95);
+      border-radius: var(--radius-pill);
+      padding: 0 12px;
+      color: var(--color-text-soft);
+      background: rgba(255,255,255,.72);
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .option-chip.is-selected {
+      color: var(--color-orange);
+      border-color: rgba(255, 106, 0, .32);
+      background: var(--color-orange-softer);
+    }
+
+    .form-stack { display: flex; flex-direction: column; gap: var(--space-3); }
+    .form-row {
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr);
+      gap: var(--space-5);
+      align-items: center;
+      min-height: 48px;
+      border: 1px solid rgba(243, 227, 209, .95);
+      border-radius: var(--radius-md);
+      padding: 0 14px;
+      background: rgba(255,255,255,.76);
+    }
+    .form-row label { color: var(--color-text-soft); font-size: 12px; }
+    .form-row input, .form-row select {
+      min-width: 0;
+      width: 100%;
+      border: 0;
+      outline: 0;
+      color: var(--color-text);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: right;
+    }
+    .form-row input::placeholder { color: var(--color-text-muted); }
+    .form-row.is-readonly strong {
+      overflow: hidden;
+      font-size: 13px;
+      text-align: right;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .field-error { margin-top: 4px; color: var(--color-danger); font-size: 11px; line-height: 16px; }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      min-height: 44px;
+      border-bottom: 1px solid var(--color-divider);
+      font-size: 13px;
+    }
+    .check-row:last-child { border-bottom: 0; }
+    .check-box {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255,106,0,.35);
+      border-radius: 7px;
+      color: #fff;
+      background: var(--color-orange);
+      font-size: 14px;
+    }
+    .check-row[data-checked="false"] .check-box { color: transparent; background: #fff; }
+
+    .copilot-sheet {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      width: min(100%, var(--page-max));
+      height: min(76dvh, 680px);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+      background: #fffbf5;
+      box-shadow: var(--shadow-float);
+    }
+    .copilot-header {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) var(--touch-target);
+      gap: var(--space-3);
+      align-items: center;
+      padding: 14px var(--space-7);
+      border-bottom: 1px solid var(--color-divider);
+    }
+    .copilot-mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      color: var(--color-orange);
+      background: var(--color-orange-softer);
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .copilot-header h2 { font-size: 17px; line-height: 23px; }
+    .copilot-header p { margin-top: 2px; color: var(--color-text-muted); font-size: 11px; line-height: 16px; }
+    .copilot-body { overflow-y: auto; padding: var(--space-7); }
+    .user-bubble {
+      width: fit-content;
+      max-width: 88%;
+      margin-left: auto;
+      border-radius: 20px 20px 6px 20px;
+      padding: 10px 14px;
+      background: var(--color-orange-soft);
+      color: #5c422f;
+      font-size: 13px;
+      line-height: 20px;
+    }
+    .assistant-kicker {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-top: var(--space-7);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .assistant-kicker .mini-ai {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--color-orange);
+      font-size: 11px;
+    }
+    .copilot-block {
+      margin-top: var(--space-4);
+      border: 1px solid rgba(243, 227, 209, .92);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      background: rgba(255,255,255,.82);
+    }
+    .copilot-block h3 { font-size: 14px; line-height: 20px; }
+    .copilot-block p { margin-top: var(--space-3); color: var(--color-text-soft); font-size: 12px; line-height: 19px; }
+    .copilot-metrics { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+    .copilot-metric { min-width: 0; border-radius: var(--radius-md); padding: var(--space-5); background: var(--color-surface-muted); }
+    .copilot-metric span { color: var(--color-text-muted); font-size: 11px; line-height: 16px; }
+    .copilot-metric strong { display: block; margin-top: 5px; color: var(--color-orange); font-size: 20px; line-height: 24px; white-space: nowrap; }
+    .copilot-metric em { display: block; margin-top: 2px; font-size: 12px; font-style: normal; line-height: 17px; }
+    .copilot-input {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) 48px;
+      gap: var(--space-3);
+      padding: 10px var(--space-7) calc(10px + var(--safe-bottom));
+      border-top: 1px solid var(--color-divider);
+    }
+    .copilot-input input {
+      min-width: 0;
+      border: 1px solid rgba(243, 227, 209, .95);
+      border-radius: var(--radius-pill);
+      padding: 0 14px;
+      background: rgba(255,255,255,.86);
+      font-size: 13px;
+      outline: 0;
+    }
+    .send-button {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--color-orange);
+      font-size: 20px;
+    }
+
+    .toast-root {
+      position: fixed;
+      z-index: 200;
+      top: 72px;
+      left: 50%;
+      display: flex;
+      width: min(calc(100vw - 32px), 350px);
+      flex-direction: column;
+      gap: var(--space-3);
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      min-height: 44px;
+      border-radius: var(--radius-pill);
+      padding: 10px 16px;
+      color: #fff;
+      background: #332c26;
+      box-shadow: var(--shadow-float);
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 19px;
+    }
+    .toast.success::before { content: "✓"; }
+    .toast.error { background: #9e3729; }
+    .toast.error::before { content: "!"; }
+
+    .bottom-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+
+    .tracking-hero { min-height: 240px; }
+    .tracking-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+    .tracking-meta {
+      min-width: 0;
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      background: rgba(255,248,240,.76);
+    }
+    .tracking-meta span { display:block; color: var(--color-text-muted); font-size:11px; line-height:16px; }
+    .tracking-meta strong { display:block; overflow:hidden; margin-top:4px; font-size:13px; line-height:19px; text-overflow:ellipsis; white-space:nowrap; }
+
+    .progress-card { padding: var(--space-7); }
+    .progress-box { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: rgba(255,255,255,.72); }
+    .progress-box h3 { font-size: 14px; line-height: 20px; }
+    .progress-box p { margin-top: var(--space-3); color: var(--color-text-soft); font-size: 13px; line-height: 20px; }
+    .progress-box small { display: block; margin-top: var(--space-3); color: var(--color-text-muted); font-size: 11px; line-height: 16px; }
+
+    .sheet-textarea {
+      width: 100%;
+      min-height: 132px;
+      resize: vertical;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      color: var(--color-text);
+      background: #fff;
+      font-size: 13px;
+      line-height: 20px;
+      outline: 0;
+    }
+
+    @media (max-width: 374px) {
+      :root { --page-padding: 14px; }
+      .grade-grid { gap: 6px; }
+      .grade-card { padding: 10px; }
+      .grade-card .grade-value { font-size: 20px; }
+      .asset-card-actions { gap: 6px; }
+      .button { padding-inline: 12px; }
+    }
+    @media (min-width: 414px) {
+      :root { --page-padding: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell" id="app-shell">
+    <div id="app"></div>
+  </main>
+  <div class="toast-root" id="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    const DATA = {
+      asOfDate: "2026-06-24",
+      metrics: {
+        month: {
+          majorWarning: { amount: 0.60, count: 5 },
+          default: { amount: 0.83, count: 7 }
+        },
+        today: {
+          majorWarning: { amount: 0.00, count: 0 },
+          default: { amount: 0.05, count: 1 }
+        }
+      },
+      stock: {
+        warning: { amount: 3342, count: 964 },
+        default: { amount: 2967, count: 731 }
+      },
+      grades: [
+        { key: "major", label: "重大预警", amount: 1162, share: 34.77, change: -9 },
+        { key: "level2", label: "二级预警", amount: 1320, share: 39.49, change: -3 },
+        { key: "level1", label: "一级预警", amount: 860, share: 25.74, change: -4 }
+      ],
+      previousGrades: [
+        { key: "major", label: "重大预警", amount: 1171 },
+        { key: "level2", label: "二级预警", amount: 1323 },
+        { key: "level1", label: "一级预警", amount: 864 }
+      ],
+      migration: {
+        majorEntered: 0.60,
+        defaultEntered: 0.83,
+        majorNet: -9,
+        allWarningNet: -16
+      },
+      memberCompanies: ["集团汇总", "银行", "租赁", "寿险", "信托", "资产管理", "产险", "医保科技"],
+      warningCustomers: [
+        {
+          id: "changning-shangyu",
+          name: "常宁市尚宇高级中学有限公司",
+          group: "湖南尚宇教育投资集团",
+          company: "医保科技",
+          date: "2026-06-23",
+          amount: 0.25,
+          level: "major",
+          assetId: "changning-shangyu-20260623"
+        },
+        {
+          id: "oulong-auto",
+          name: "欧龙汽车贸易集团有限公司",
+          group: "欧龙汽车贸易集团",
+          company: "租赁",
+          date: "2026-06-15",
+          amount: 0.24,
+          level: "major",
+          assetId: "oulong-auto-20260615"
+        }
+      ],
+      defaultCustomers: [
+        {
+          id: "guangxi-baise",
+          name: "广西百色试验区发展集团有限公司",
+          group: "广西百色城市产业发展集团",
+          company: "租赁",
+          date: "2026-06-01",
+          amount: 0.47,
+          defaultCategory: "逾期",
+          defaultReason: "本息实质逾期",
+          assetId: "guangxi-baise-047"
+        },
+        {
+          id: "taizhou-yingrun",
+          name: "泰州盈润光伏科技有限公司",
+          group: "江苏长明新能源电力科技集团",
+          company: "租赁",
+          date: "2026-06-01",
+          amount: 0.13,
+          defaultCategory: "逾期",
+          defaultReason: "本息实质逾期",
+          assetId: "taizhou-yingrun-013"
+        }
+      ],
+      assets: {
+        "changning-shangyu-20260623": {
+          id: "changning-shangyu-20260623",
+          customerId: "changning-shangyu",
+          name: "常宁市尚宇高级中学有限公司重大预警资产",
+          customerName: "常宁市尚宇高级中学有限公司",
+          group: "湖南尚宇教育投资集团",
+          company: "医保科技",
+          amount: 0.25,
+          state: "major",
+          warningDate: "2026-06-23",
+          warningReason: null,
+          stateHistory: [
+            { date: "2026-06-23", title: "进入重大预警", description: "该资产于2026-06-23进入重大预警。" }
+          ]
+        },
+        "guangxi-baise-047": {
+          id: "guangxi-baise-047",
+          customerId: "guangxi-baise",
+          name: "广西百色试验区发展集团出险事项",
+          customerName: "广西百色试验区发展集团有限公司",
+          group: "广西百色城市产业发展集团",
+          company: "租赁",
+          amount: 0.47,
+          state: "default",
+          businessType: "非标投资",
+          projectName: "广西百色试验区发展集团有限公司",
+          portfolio: "—",
+          fundingSource: "一方资金",
+          disbursementDate: "2022-05-23",
+          maturityDate: "2026-05-23",
+          guarantors: [
+            "广西百色开发投资集团有限公司",
+            "广西百色城市建设投资发展集团有限公司"
+          ],
+          defaultCategory: "逾期",
+          defaultReason: "本息实质逾期",
+          defaultDate: "2026-06-01",
+          overdueDaysAtRecognition: 9,
+          timeline: [
+            { date: "2022-05-23", title: "放款", description: "非标投资资产完成放款。" },
+            { date: "2026-05-23", title: "资产到期", description: "合同约定资产到期。" },
+            { date: "2026-06-01", title: "出险认定", description: "本息实质逾期，出险规模0.47亿元。", tone: "default" }
+          ]
+        }
+      },
+      demoDefaultTrend: [2942, 2948, 2954, 2961, 2965, 2967],
+      tracking: {
+        id: "guangxi-baise-default",
+        subject: "广西百色试验区发展集团出险事项",
+        assetId: "guangxi-baise-047",
+        customerId: "guangxi-baise",
+        company: "租赁",
+        ownerDepartment: "租赁风险管理部",
+        ownerName: "李明",
+        dueDate: "2026-06-30",
+        frequency: "每周",
+        latestUpdateAt: "2026-06-20",
+        progressTitle: "已发起逾期款项催收",
+        progressText: "正在核实两家担保方的履约安排，下一次更新聚焦回款计划与担保落实情况。",
+        records: [
+          { date: "06-20", title: "更新进展", description: "已发起催收并核实担保安排。" },
+          { date: "06-02", title: "加入重点跟踪", description: "设置责任人、期限与每周跟踪频率。" },
+          { date: "06-01", title: "资产出险", description: "本息实质逾期，规模0.47亿元。", tone: "default" }
+        ]
+      }
+    };
+
+    const safeStorage = {
+      get(area, key, fallback = null) {
+        try { return window[area].getItem(key) ?? fallback; } catch { return fallback; }
+      },
+      set(area, key, value) {
+        try { window[area].setItem(key, value); } catch {}
+      }
+    };
+
+    const UI = {
+      sheetDraft: null,
+      reportDraft: { riskFacts: true, assetFields: true, tracking: true },
+      copilotQuestion: "本月新增重大预警和出险规模分别是多少？",
+      trackingDraft: { owner: "", dueDate: "", frequency: "weekly" },
+      progressDraft: "",
+      scrollPositions: JSON.parse(safeStorage.get("sessionStorage", "wd-scroll", "{}") || "{}")
+    };
+
+    const app = document.getElementById("app");
+    const shell = document.getElementById("app-shell");
+    const toastRoot = document.getElementById("toast-root");
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function money(value, unit = "亿元") {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return "—";
+      const number = Number(value);
+      if (Math.abs(number) >= 10000) return `${(number / 10000).toFixed(2)}万${unit}`;
+      const digits = Math.abs(number) < 10 ? 2 : (Number.isInteger(number) ? 0 : 2);
+      return `${number.toLocaleString("zh-CN", { minimumFractionDigits: digits, maximumFractionDigits: digits })}${unit}`;
+    }
+
+    function parseLocation() {
+      let raw = location.hash.slice(1) || "/credit/warning";
+      if (!raw.startsWith("/")) raw = "/" + raw;
+      const [path, queryString = ""] = raw.split("?");
+      return { path, query: new URLSearchParams(queryString), raw };
+    }
+
+    function makeHash(path, query = {}) {
+      const params = new URLSearchParams();
+      Object.entries(query).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "" && value !== false) params.set(key, String(value));
+      });
+      return `#${path}${params.toString() ? `?${params.toString()}` : ""}`;
+    }
+
+    function navigate(path, query = {}) {
+      saveScroll(location.hash.slice(1) || "/credit/warning");
+      location.hash = makeHash(path, query);
+    }
+
+    function replaceQuery(patch = {}) {
+      const current = parseLocation();
+      const params = new URLSearchParams(current.query);
+      Object.entries(patch).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "" || value === false) params.delete(key);
+        else params.set(key, String(value));
+      });
+      history.replaceState(null, "", `#${current.path}${params.toString() ? `?${params.toString()}` : ""}`);
+    }
+
+    function saveScroll(rawKey) {
+      if (!rawKey) return;
+      UI.scrollPositions[rawKey] = shell.scrollTop || document.documentElement.scrollTop || 0;
+      safeStorage.set("sessionStorage", "wd-scroll", JSON.stringify(UI.scrollPositions));
+    }
+
+    function restoreScroll(rawKey) {
+      const value = UI.scrollPositions[rawKey] ?? 0;
+      requestAnimationFrame(() => shell.scrollTo({ top: value, behavior: "auto" }));
+    }
+
+    function showToast(message, type = "success") {
+      const node = document.createElement("div");
+      node.className = `toast ${type}`;
+      node.textContent = message;
+      toastRoot.appendChild(node);
+      setTimeout(() => node.remove(), type === "error" ? 5000 : 3000);
+    }
+
+    function shareCurrent() {
+      const payload = { title: document.title, text: "预警出险风险页面", url: location.href };
+      if (navigator.share) {
+        navigator.share(payload).then(() => showToast("页面已分享")).catch(() => {});
+      } else {
+        showToast("链接已准备，可复制浏览器地址");
+      }
+    }
+
+    function pageHeader(title, fallback) {
+      return `
+        <header class="page-header">
+          <button class="icon-button" type="button" data-back data-fallback="${escapeHtml(fallback)}" aria-label="返回">‹</button>
+          <h1>${escapeHtml(title)}</h1>
+          <button class="icon-button icon-small" type="button" data-share aria-label="分享">↗</button>
+        </header>
+      `;
+    }
+
+    function creditTabs() {
+      return `
+        <nav class="credit-tabs" role="tablist" aria-label="信用风险分类">
+          <button type="button" role="tab" aria-selected="false" data-action="non-scope-tab">大户风险</button>
+          <button type="button" role="tab" aria-selected="false" data-action="non-scope-tab">集中度风险</button>
+          <button type="button" role="tab" aria-selected="true" class="is-active">预警与出险</button>
+        </nav>
+      `;
+    }
+
+    function sectionHeading(title, actionLabel = "", action = "") {
+      return `
+        <div class="section-heading">
+          <h2>${escapeHtml(title)}</h2>
+          ${actionLabel ? `<button class="section-action" type="button" ${action ? `data-action="${escapeHtml(action)}"` : ""}>${escapeHtml(actionLabel)} <span aria-hidden="true">›</span></button>` : ""}
+        </div>
+      `;
+    }
+
+    function bottomAskBar() {
+      return `
+        <div class="bottom-ask" aria-label="AI 风控助手入口">
+          <button class="bottom-ask__input" type="button" data-open-copilot>
+            <span class="bot-mark" aria-hidden="true">AI</span>
+            <span class="placeholder">问预警、查出险、生成风险查询…</span>
+            <span aria-hidden="true">⌕</span>
+          </button>
+          <button class="bottom-ask__plus" type="button" data-open-copilot aria-label="打开AI风控助手">＋</button>
+        </div>
+      `;
+    }
+
+    function tag(label, variant = "neutral") {
+      return `<span class="tag tag-${variant}">${escapeHtml(label)}</span>`;
+    }
+
+    function gradeCards() {
+      return DATA.grades.map(item => `
+        <button class="grade-card ${item.key}" type="button" data-nav="/credit/warning/prewarnings/customers" data-query-grade="${item.key}" aria-label="查看${item.label}客户">
+          <span class="grade-label">${item.label}</span>
+          <strong class="grade-value">${item.amount.toLocaleString("zh-CN")}</strong>
+          <span class="grade-change trend-down">↓ ${Math.abs(item.change)}亿元</span>
+        </button>
+      `).join("");
+    }
+
+    function structureCard() {
+      return `
+        <section class="card structure-card">
+          ${sectionHeading("预警资产结构", "查看预警资产", "open-prewarnings")}
+          <div class="structure-bar" aria-label="重大预警34.77%，二级预警39.49%，一级预警25.74%">
+            <span class="major" style="width:34.77%"></span>
+            <span class="level2" style="width:39.49%"></span>
+            <span class="level1" style="width:25.74%"></span>
+          </div>
+          <div class="structure-legend">
+            ${DATA.grades.map(item => `
+              <div>
+                <span>${item.label}</span>
+                <strong>${item.amount.toLocaleString("zh-CN")}亿</strong>
+                <em>${item.share.toFixed(2)}%</em>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function riskListItem(item, type) {
+      const isWarning = type === "warning";
+      const stateTag = isWarning ? tag("重大预警", "major") : tag("出险", "default");
+      const route = isWarning ? `/credit/warning/customers/${item.id}` : `/credit/warning/customers/${item.id}`;
+      const searchText = `${item.name} ${item.group} ${item.company}`.toLowerCase();
+      return `
+        <article class="risk-list-item is-clickable" tabindex="0" role="link" data-list-item data-search="${escapeHtml(searchText)}" data-company="${escapeHtml(item.company)}" data-nav="${route}">
+          <div class="risk-list-main">
+            <h3 class="risk-list-name">${escapeHtml(item.name)}</h3>
+            <p class="risk-list-group">所属集团：${escapeHtml(item.group)}</p>
+            <div class="risk-list-tags">${stateTag}${tag(item.company, "neutral")}</div>
+            <p class="risk-list-date">${isWarning ? "预警日期" : "出险日期"}：${escapeHtml(item.date)}</p>
+          </div>
+          <div class="risk-list-amount">
+            <strong>${item.amount.toFixed(2)}</strong>
+            <span>亿元</span>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderOverview(query) {
+      const period = query.get("period") === "today" ? "today" : "month";
+      const metric = DATA.metrics[period];
+      return `
+        <div class="page">
+          ${pageHeader("信用风险", "/")}
+          <div class="page-content">
+            ${creditTabs()}
+            <section>
+              <div class="section-heading">
+                <h2>新增风险规模</h2>
+                <div class="segmented" role="tablist" aria-label="新增风险周期">
+                  <button type="button" class="${period === "today" ? "is-active" : ""}" data-period="today" aria-selected="${period === "today"}">本日</button>
+                  <button type="button" class="${period === "month" ? "is-active" : ""}" data-period="month" aria-selected="${period === "month"}">本月</button>
+                </div>
+              </div>
+              <div class="metric-grid" style="margin-top:12px">
+                <button class="card metric-card tone-major" type="button" data-nav="/credit/warning/prewarnings/customers">
+                  <span class="metric-label">△ 新增重大预警</span>
+                  <span class="metric-value"><strong>${metric.majorWarning.amount.toFixed(2)}</strong><span>亿元</span></span>
+                  <span class="metric-meta">涉及 ${metric.majorWarning.count} 户法人客户</span>
+                </button>
+                <button class="card metric-card tone-default" type="button" data-nav="/credit/warning/defaults/customers">
+                  <span class="metric-label">◇ 新增出险</span>
+                  <span class="metric-value"><strong>${metric.default.amount.toFixed(2)}</strong><span>亿元</span></span>
+                  <span class="metric-meta">涉及 ${metric.default.count} 户法人客户</span>
+                </button>
+              </div>
+              <div class="data-scope-row" style="margin-top:10px">
+                <span>数据截至 ${DATA.asOfDate}</span>
+                <button type="button" data-open-sheet="metrics">规模优先 · 客户去重 ›</button>
+              </div>
+            </section>
+
+            <section>
+              ${sectionHeading("存量风险", "查看口径", "open-metrics")}
+              <div class="metric-grid" style="margin-top:12px">
+                <button class="card metric-card tone-neutral" type="button" data-nav="/credit/warning/prewarnings">
+                  <span class="metric-label">预警资产</span>
+                  <span class="metric-value"><strong>${DATA.stock.warning.amount.toLocaleString("zh-CN")}</strong><span>亿元</span></span>
+                  <span class="metric-meta">${DATA.stock.warning.count} 法人客户</span>
+                </button>
+                <button class="card metric-card tone-default" type="button" data-nav="/credit/warning/defaults">
+                  <span class="metric-label">出险资产</span>
+                  <span class="metric-value"><strong>${DATA.stock.default.amount.toLocaleString("zh-CN")}</strong><span>亿元</span></span>
+                  <span class="metric-meta">${DATA.stock.default.count} 法人客户</span>
+                </button>
+              </div>
+            </section>
+
+            <section>
+              ${sectionHeading("本月主要变化", "较上月末", "open-migration")}
+              <div class="grade-grid" style="margin-top:12px">${gradeCards()}</div>
+            </section>
+
+            ${structureCard()}
+
+            <section>
+              ${sectionHeading("本月新增重大预警", "5户 · 0.60亿元", "open-warning-customers")}
+              <div class="risk-list" style="margin-top:12px">
+                ${DATA.warningCustomers.map(item => riskListItem(item, "warning")).join("")}
+              </div>
+            </section>
+
+            <section>
+              ${sectionHeading("本月新增出险", "7户 · 0.83亿元", "open-default-customers")}
+              <div class="risk-list" style="margin-top:12px">
+                ${DATA.defaultCustomers.map(item => riskListItem(item, "default")).join("")}
+              </div>
+              <div class="data-scope-row" style="margin-top:10px">
+                <span>当前演示展示2户</span>
+                <span>其余对象未在已确认素材中提供</span>
+              </div>
+            </section>
+          </div>
+          ${bottomAskBar()}
+        </div>
+      `;
+    }
+
+    function renderPrewarnings(query) {
+      const member = query.get("member") || "集团汇总";
+      const hasMemberData = member === "集团汇总";
+      const previousTotal = DATA.previousGrades.reduce((sum, item) => sum + item.amount, 0);
+      return `
+        <div class="page">
+          ${pageHeader("预警资产", "/credit/warning")}
+          <div class="page-content">
+            <section class="hero-card">
+              <div class="hero-topline">
+                ${tag(member, member === "集团汇总" ? "major" : "neutral")}
+                <span class="hero-date">数据截至 ${DATA.asOfDate}</span>
+              </div>
+              <div class="hero-facts">
+                <div class="hero-fact"><span>预警资产</span><strong class="emphasis">${hasMemberData ? DATA.stock.warning.amount.toLocaleString("zh-CN") : "—"}亿元</strong></div>
+                <div class="hero-fact"><span>预警客户</span><strong>${hasMemberData ? DATA.stock.warning.count : "—"}户</strong></div>
+              </div>
+            </section>
+
+            ${hasMemberData ? `
+              <section>
+                ${sectionHeading("预警等级结构", "较上月末", "open-migration")}
+                <div class="grade-grid" style="margin-top:12px">${gradeCards()}</div>
+              </section>
+
+              <section class="card compare-chart-card">
+                ${sectionHeading("近期结构", "查看迁移明细", "open-migration")}
+                <div class="compare-chart" role="img" aria-label="上月末预警资产3358亿元，当前预警资产3342亿元">
+                  <div class="compare-column-wrap">
+                    <div class="compare-column" aria-hidden="true">
+                      <span class="major" style="height:${(1171 / previousTotal * 100).toFixed(2)}%"></span>
+                      <span class="level2" style="height:${(1323 / previousTotal * 100).toFixed(2)}%"></span>
+                      <span class="level1" style="height:${(864 / previousTotal * 100).toFixed(2)}%"></span>
+                    </div>
+                    <div class="compare-label"><span>05月末</span><strong>3,358</strong></div>
+                  </div>
+                  <div class="compare-column-wrap">
+                    <div class="compare-column" aria-hidden="true">
+                      <span class="major" style="height:34.77%"></span>
+                      <span class="level2" style="height:39.49%"></span>
+                      <span class="level1" style="height:25.74%"></span>
+                    </div>
+                    <div class="compare-label"><span>06-24</span><strong>3,342</strong></div>
+                  </div>
+                </div>
+                <div class="chart-legend">
+                  <span><i class="legend-dot" style="background:var(--color-major)"></i>重大预警</span>
+                  <span><i class="legend-dot" style="background:var(--color-orange)"></i>二级预警</span>
+                  <span><i class="legend-dot" style="background:var(--color-warning)"></i>一级预警</span>
+                  <span>${tag("单位：亿元", "neutral")}</span>
+                </div>
+              </section>
+            ` : `
+              <section class="card empty-state">
+                <span class="state-icon" aria-hidden="true">○</span>
+                <h3>当前演示未提供${escapeHtml(member)}分项数据</h3>
+                <p>成员公司筛选状态已生效；切回集团汇总可查看已确认指标。</p>
+                <button class="button button-secondary" type="button" data-set-member="集团汇总">切回集团汇总</button>
+              </section>
+            `}
+
+            <section>
+              ${sectionHeading("成员公司", "全部成员公司", "open-member-sheet")}
+              <div class="chip-row" style="margin-top:10px">
+                ${DATA.memberCompanies.slice(0,5).map(name => `<button class="chip ${member === name ? "is-active" : ""}" type="button" data-set-member="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join("")}
+                <button class="chip" type="button" data-open-sheet="member">全部成员公司</button>
+              </div>
+            </section>
+          </div>
+          ${bottomAskBar()}
+        </div>
+      `;
+    }
+
+    function renderMigrations(query) {
+      const member = query.get("member") || "集团汇总";
+      const sort = query.get("sort") || "amount";
+      const list = [...DATA.warningCustomers].sort((a,b) => sort === "date" ? b.date.localeCompare(a.date) : b.amount - a.amount);
+      return `
+        <div class="page">
+          ${pageHeader("预警迁移", "/credit/warning/prewarnings")}
+          <div class="page-content">
+            <div class="search-row" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+              <label class="form-row" style="grid-template-columns:80px minmax(0,1fr);padding-inline:12px"><span>月份</span><select id="migration-month"><option>2026年6月</option></select></label>
+              <label class="form-row" style="grid-template-columns:72px minmax(0,1fr);padding-inline:12px"><span>范围</span><select id="migration-member"><option>${escapeHtml(member)}</option><option>集团汇总</option><option>租赁</option><option>医保科技</option></select></label>
+            </div>
+
+            <section>
+              ${sectionHeading("状态变化概览", "按资产状态归类")}
+              <div class="metric-grid" style="margin-top:12px">
+                <article class="card metric-card tone-major"><span class="metric-label">本月进入重大预警</span><span class="metric-value"><strong>0.60</strong><span>亿元</span></span><span class="metric-meta">涉及5户法人客户</span></article>
+                <article class="card metric-card tone-default"><span class="metric-label">本月新增出险</span><span class="metric-value"><strong>0.83</strong><span>亿元</span></span><span class="metric-meta">涉及7户法人客户</span></article>
+                <article class="card metric-card tone-neutral"><span class="metric-label">重大预警净变化</span><span class="metric-value" style="color:var(--color-success)"><strong>-9</strong><span>亿元</span></span><span class="metric-meta">较上月末</span></article>
+                <article class="card metric-card tone-neutral"><span class="metric-label">全部预警净变化</span><span class="metric-value" style="color:var(--color-success)"><strong>-16</strong><span>亿元</span></span><span class="metric-meta">一级、二级、重大合计</span></article>
+              </div>
+            </section>
+
+            <section class="notice-card">
+              <strong>口径：</strong>
+              <span>预警支持升级、降级、解除和重新进入。当前仅展示已确认的新增规模与等级净变化，不对缺失迁移来源进行推断。</span>
+            </section>
+
+            <section>
+              <div class="section-heading">
+                <h2>本月进入重大预警</h2>
+                <label class="section-action">排序
+                  <select id="migration-sort" style="border:0;background:transparent;color:inherit;font-weight:650">
+                    <option value="amount" ${sort === "amount" ? "selected" : ""}>按规模</option>
+                    <option value="date" ${sort === "date" ? "selected" : ""}>按最近时间</option>
+                  </select>
+                </label>
+              </div>
+              <div class="risk-list" style="margin-top:12px">${list.map(item => riskListItem(item, "warning")).join("")}</div>
+            </section>
+          </div>
+          ${bottomAskBar()}
+        </div>
+      `;
+    }
+
+    function renderCustomerList(type, query) {
+      const isWarning = type === "warning";
+      const title = isWarning ? "重大预警客户" : "出险客户";
+      const fallback = isWarning ? "/credit/warning/prewarnings/migrations" : "/credit/warning/defaults";
+      const totalAmount = isWarning ? DATA.metrics.month.majorWarning.amount : DATA.metrics.month.default.amount;
+      const totalCount = isWarning ? DATA.metrics.month.majorWarning.count : DATA.metrics.month.default.count;
+      const state = query.get("state") || "ready";
+      const q = (query.get("q") || "").toLowerCase();
+      const member = query.get("member") || "全部成员公司";
+      const sort = query.get("sort") || "amount";
+      const items = [...(isWarning ? DATA.warningCustomers : DATA.defaultCustomers)]
+        .filter(item => member === "全部成员公司" || item.company === member)
+        .filter(item => !q || `${item.name} ${item.group} ${item.company}`.toLowerCase().includes(q))
+        .sort((a,b) => sort === "date" ? b.date.localeCompare(a.date) : b.amount - a.amount);
+
+      let listContent = "";
+      if (state === "loading") {
+        listContent = `<div class="risk-list"><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div></div>`;
+      } else if (state === "error") {
+        listContent = `<section class="card error-state"><span class="state-icon">!</span><h3>列表加载失败</h3><p>请检查当前网络后重试。本状态用于验证错误处理。</p><button class="button button-primary" type="button" data-action="retry-list">重新加载</button></section>`;
+      } else if (!items.length || state === "empty") {
+        listContent = `<section class="card empty-state"><span class="state-icon">⌕</span><h3>没有匹配的${title}</h3><p>可调整搜索词或重置筛选条件。</p><button class="button button-secondary" type="button" data-action="reset-list-filters">重置筛选</button></section>`;
+      } else {
+        listContent = `<div class="risk-list" id="risk-list">${items.map(item => riskListItem(item, type)).join("")}</div><div class="data-scope-row"><span>当前演示展示 ${items.length} 户</span><span>汇总口径 ${totalCount} 户</span></div>`;
+      }
+
+      return `
+        <div class="page">
+          ${pageHeader(title, fallback)}
+          <div class="page-content">
+            <section class="hero-card">
+              <div class="hero-facts" style="margin-top:0">
+                <div class="hero-fact"><span>${isWarning ? "重大预警规模" : "出险规模"}</span><strong class="emphasis">${totalAmount.toFixed(2)}亿元</strong></div>
+                <div class="hero-fact"><span>法人客户</span><strong>${totalCount}户</strong></div>
+              </div>
+            </section>
+
+            <section class="search-row">
+              <label class="search-field"><span aria-hidden="true">⌕</span><input id="list-search" type="search" value="${escapeHtml(query.get("q") || "")}" placeholder="搜索法人客户或所属集团" aria-label="搜索法人客户或所属集团"></label>
+              <button class="icon-button icon-small" type="button" data-open-sheet="filter" aria-label="筛选">≡</button>
+            </section>
+
+            <div class="chip-row">
+              <button class="chip is-active" type="button" data-open-sheet="filter">${isWarning ? "本月新增" : "本月"}</button>
+              <button class="chip ${member !== "全部成员公司" ? "is-active" : ""}" type="button" data-open-sheet="filter">${escapeHtml(member)}</button>
+              ${isWarning ? "" : `<button class="chip ${query.get("category") ? "is-active" : ""}" type="button" data-open-sheet="filter">${escapeHtml(query.get("category") || "全部类别")}</button>`}
+              <button class="chip ${sort !== "amount" ? "is-active" : ""}" type="button" data-open-sheet="filter">${sort === "date" ? "按最近时间" : "规模从高到低"}</button>
+            </div>
+
+            ${listContent}
+          </div>
+          ${bottomAskBar()}
+        </div>
+      `;
+    }
+
+    function renderWarningCustomer() {
+      const item = DATA.warningCustomers[0];
+      const asset = DATA.assets[item.assetId];
+      return `
+        <div class="page">
+          ${pageHeader("客户风险概览", "/credit/warning/prewarnings/customers")}
+          <div class="page-content">
+            <section class="hero-card customer-hero">
+              <div class="hero-topline">${tag("重大预警", "major")}<span class="hero-date">进入日期 ${item.date}</span></div>
+              <h2 class="customer-title">${escapeHtml(item.name)}</h2>
+              <p class="customer-group">所属集团：${escapeHtml(item.group)}</p>
+              <div class="hero-facts">
+                <div class="hero-fact"><span>重大预警资产</span><strong class="emphasis">${item.amount.toFixed(2)}亿元</strong></div>
+                <div class="hero-fact"><span>平安成员公司</span><strong>${escapeHtml(item.company)}</strong></div>
+              </div>
+            </section>
+
+            <section>
+              ${sectionHeading("风险资产", "1笔")}
+              <article class="card risk-asset-card" style="margin-top:12px">
+                <div class="asset-card-head"><h3>${escapeHtml(asset.name)}</h3>${tag("重大预警", "major")}</div>
+                <div class="asset-card-meta">
+                  <div><span>风险规模</span><strong>${asset.amount.toFixed(2)}亿元</strong></div>
+                  <div><span>成员公司</span><strong>${escapeHtml(asset.company)}</strong></div>
+                  <div><span>预警日期</span><strong>${escapeHtml(asset.warningDate.slice(5))}</strong></div>
+                </div>
+                <div class="asset-card-actions">
+                  <button class="button button-secondary" type="button" data-open-tracking data-asset-id="${asset.id}">加入跟踪</button>
+                  <button class="button button-primary" type="button" data-nav="/credit/warning/assets/${asset.id}">查看资产详情</button>
+                </div>
+              </article>
+            </section>
+
+            <section class="card timeline-card">
+              ${sectionHeading("状态记录", "全部", "show-all-history")}
+              <div class="timeline" style="margin-top:14px">
+                ${asset.stateHistory.map(item => timelineItem(item)).join("")}
+              </div>
+            </section>
+          </div>
+          ${bottomAskBar()}
+        </div>
+      `;
+    }
+
+    function timelineItem(item) {
+      return `
+        <div class="timeline-item ${item.tone === "default" ? "is-default" : ""}">
+          <div class="timeline-date">${escapeHtml(item.date)}</div>
+          <div class="timeline-axis"><span class="timeline-dot"></span></div>
+          <div class="timeline-content"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.description || "")}</p></div>
+        </div>
+      `;
+    }
+
+    function renderWarningAsset(asset) {
+      return `
+        <div class="page">
+          ${pageHeader("预警资产详情", `/credit/warning/customers/${asset.customerId}`)}
+          <div class="page-content">
+            <section class="hero-card">
+              <div class="hero-topline">${tag("重大预警", "major")}<span class="hero-date">数据截至 ${DATA.asOfDate}</span></div>
+              <div class="metric-card tone-major" style="padding:0;min-height:0;margin-top:10px">
+                <span class="metric-label">重大预警资产规模</span>
+                <span class="metric-value"><strong>${asset.amount.toFixed(2)}</strong><span>亿元</span></span>
+                <span class="metric-meta">${escapeHtml(asset.customerName)}</span>
+              </div>
+            </section>
+
+            <section class="card card-pad">
+              ${sectionHeading("风险事实")}
+              <div class="fact-grid" style="margin-top:12px">
+                <div class="fact-item"><span>当前状态</span><strong>重大预警</strong></div>
+                <div class="fact-item"><span>预警日期</span><strong>${escapeHtml(asset.warningDate)}</strong></div>
+                <div class="fact-item"><span>成员公司</span><strong>${escapeHtml(asset.company)}</strong></div>
+                <div class="fact-item"><span>所属集团</span><strong>${escapeHtml(asset.group)}</strong></div>
+                <div class="fact-item span-2"><span>预警原因</span><strong>${asset.warningReason ? escapeHtml(asset.warningReason) : "暂无可用触发原因明细"}</strong></div>
+              </div>
+            </section>
+
+            <section class="card timeline-card">
+              ${sectionHeading("状态变化", "资产已确认")}
+              <div class="timeline" style="margin-top:14px">${asset.stateHistory.map(item => timelineItem(item)).join("")}</div>
+              <div class="notice-card" style="margin-top:12px"><span>此前迁移记录当前未提供，系统不补充推断。</span></div>
+            </section>
+
+            <div class="bottom-actions">
+              <button class="button button-secondary" type="button" data-open-report data-asset-id="${asset.id}">加入风险报告</button>
+              <button class="button button-primary" type="button" data-open-tracking data-asset-id="${asset.id}">加入重点跟踪</button>
+            </div>
+          </div>
+          ${bottomAskBar()}
+        </div>
+      `;
+    }
+
+    function renderDefaults(query) {
+      const period = query.get("period") === "today" ? "today" : "month";
+      const member = query.get("member") || "集团汇总";
+      const hasMemberData = member === "集团汇总";
+      const trend = DATA.demoDefaultTrend;
+      const min = Math.min(...trend) - 8;
+      const max = Math.max(...trend) + 6;
+      const points = trend.map((value, index) => {
+        const x = index / (trend.length - 1) * 100;
+        const y = 100 - ((value - min) / (max - min) * 100);
+        return `${x},${y}`;
+      }).join(" ");
+      return `
+        <div class="page">
+          ${pageHeader("出险资产", "/credit/warning")}
+          <div class="page-content">
+            <section class="hero-card">
+              <div class="hero-topline">${tag(member, member === "集团汇总" ? "default" : "neutral")}<span class="hero-date">数据截至 ${DATA.asOfDate}</span></div>
+              <div class="hero-facts">
+                <div class="hero-fact"><span>出险资产</span><strong class="emphasis" style="color:var(--color-default)">${hasMemberData ? DATA.stock.default.amount.toLocaleString("zh-CN") : "—"}亿元</strong></div>
+                <div class="hero-fact"><span>出险客户</span><strong>${hasMemberData ? DATA.stock.default.count : "—"}户</strong></div>
+              </div>
+            </section>
+
+            <section>
+              <div class="section-heading">
+                <h2>新增出险</h2>
+                <div class="segmented">
+                  <button class="${period === "today" ? "is-active" : ""}" type="button" data-period="today">本日</button>
+                  <button class="${period === "month" ? "is-active" : ""}" type="button" data-period="month">本月</button>
+                </div>
+              </div>
+              <div class="metric-grid" style="margin-top:12px">
+                <button class="card metric-card tone-default" type="button" data-nav="/credit/warning/defaults/customers">
+                  <span class="metric-label">新增出险规模</span>
+                  <span class="metric-value"><strong>${DATA.metrics[period].default.amount.toFixed(2)}</strong><span>亿元</span></span>
+                  <span class="metric-meta">涉及${DATA.metrics[period].default.count}户法人客户</span>
+                </button>
+                <article class="card metric-card tone-neutral">
+                  <span class="metric-label">${period === "month" ? "本日新增" : "本月累计"}</span>
+                  <span class="metric-value"><strong>${DATA.metrics[period === "month" ? "today" : "month"].default.amount.toFixed(2)}</strong><span>亿元</span></span>
+                  <span class="metric-meta">${DATA.metrics[period === "month" ? "today" : "month"].default.count}户</span>
+                </article>
+              </div>
+            </section>
+
+            <section>
+              ${sectionHeading("成员公司", "全部成员公司", "open-member-sheet")}
+              <div class="chip-row" style="margin-top:10px">
+                ${DATA.memberCompanies.slice(0,5).map(name => `<button class="chip ${member === name ? "is-active" : ""}" type="button" data-set-member="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join("")}
+                <button class="chip" type="button" data-open-sheet="member">全部成员公司</button>
+              </div>
+            </section>
+
+            ${hasMemberData ? `
+              <section class="card trend-card">
+                ${sectionHeading("出险资产变化趋势", "趋势演示")}
+                <div class="data-scope-row" style="margin-top:8px"><span>当前规模 ${DATA.stock.default.amount.toLocaleString("zh-CN")}亿元</span><span>历史序列为演示数据</span></div>
+                <div class="trend-chart" role="img" aria-label="2026年1月至6月出险资产规模演示趋势，当前2967亿元">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <polyline points="${points}" fill="none" stroke="#c94631" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                  </svg>
+                </div>
+                <div class="trend-axis-labels"><span>2026-01</span><span>2026-06</span></div>
+                <ol class="sr-only">${trend.map((value,index) => `<li>2026-${String(index+1).padStart(2,"0")}：${value}亿元，演示数据</li>`).join("")}</ol>
+              </section>
+            ` : `
+              <section class="card empty-state"><span class="state-icon">○</span><h3>当前演示未提供${escapeHtml(member)}分项数据</h3><p>筛选状态已生效；切回集团汇总可查看出险指标。</p><button class="button button-secondary" type="button" data-set-member="集团汇总">切回集团汇总</button></section>
+            `}
+          </div>
+          ${bottomAskBar()}
+        </div>
+      `;
+    }
+
+    function renderDefaultCustomer() {
+      const item = DATA.defaultCustomers[0];
+      const asset = DATA.assets[item.assetId];
+      return `
+        <div class="page">
+          ${pageHeader("客户风险概览", "/credit/warning/defaults/customers")}
+          <div class="page-content">
+            <section class="hero-card customer-hero">
+              <div class="hero-topline">${tag("出险", "default")}<span class="hero-date">认定日期 ${item.date}</span></div>
+              <h2 class="customer-title">${escapeHtml(item.name)}</h2>
+              <p class="customer-group">所属集团：${escapeHtml(item.group)}</p>
+              <div class="hero-facts">
+                <div class="hero-fact"><span>出险规模</span><strong class="emphasis" style="color:var(--color-default)">${item.amount.toFixed(2)}亿元</strong></div>
+                <div class="hero-fact"><span>平安成员公司</span><strong>${escapeHtml(item.company)}</strong></div>
+              </div>
+            </section>
+
+            <section class="card card-pad">
+              ${sectionHeading("风险判断")}
+              <div class="fact-grid" style="margin-top:12px">
+                <div class="fact-item"><span>风险结论</span><strong style="color:var(--color-default)">已出险</strong></div>
+                <div class="fact-item"><span>出险类别</span><strong>${escapeHtml(asset.defaultCategory)}</strong></div>
+                <div class="fact-item span-2"><span>出险原因</span><strong>${escapeHtml(asset.defaultReason)}</strong></div>
+                <div class="fact-item"><span>影响规模</span><strong>${asset.amount.toFixed(2)}亿元</strong></div>
+                <div class="fact-item"><span>关键日期</span><strong>到期 ${asset.maturityDate}<br>出险 ${asset.defaultDate}</strong></div>
+              </div>
+            </section>
+
+            <section>
+              ${sectionHeading("风险资产", "1笔")}
+              <article class="card risk-asset-card" style="margin-top:12px">
+                <div class="asset-card-head"><h3>${escapeHtml(asset.projectName)}</h3>${tag("出险", "default")}</div>
+                <div class="asset-card-meta">
+                  <div><span>风险规模</span><strong>${asset.amount.toFixed(2)}亿元</strong></div>
+                  <div><span>到期日</span><strong>${asset.maturityDate.slice(5)}</strong></div>
+                  <div><span>出险日</span><strong>${asset.defaultDate.slice(5)}</strong></div>
+                </div>
+                <div class="asset-card-actions">
+                  <button class="button button-secondary" type="button" data-open-tracking data-asset-id="${asset.id}">加入跟踪</button>
+                  <button class="button button-primary" type="button" data-nav="/credit/warning/assets/${asset.id}">查看资产详情</button>
+                </div>
+              </article>
+            </section>
+          </div>
+          ${bottomAskBar()}
+        </div>
+      `;
+    }
+
+    function renderDefaultAsset(asset) {
+      return `
+        <div class="page">
+          ${pageHeader("出险资产详情", `/credit/warning/customers/${asset.customerId}`)}
+          <div class="page-content">
+            <section class="hero-card">
+              <div class="hero-topline">${tag("出险", "default")}<span class="hero-date">出险日期 ${asset.defaultDate}</span></div>
+              <div class="metric-card tone-default" style="padding:0;min-height:0;margin-top:10px">
+                <span class="metric-label">出险规模</span>
+                <span class="metric-value"><strong>${asset.amount.toFixed(2)}</strong><span>亿元</span></span>
+                <span class="metric-meta">${escapeHtml(asset.customerName)}</span>
+              </div>
+            </section>
+
+            <section class="card card-pad">
+              ${sectionHeading("关键风险事实")}
+              <div class="fact-grid" style="margin-top:12px">
+                <div class="fact-item span-2"><span>出险类别</span><strong>${escapeHtml(asset.defaultCategory)}（${escapeHtml(asset.defaultReason)}）</strong></div>
+                <div class="fact-item"><span>逾期时长</span><strong style="color:var(--color-default)">${asset.overdueDaysAtRecognition}天</strong></div>
+                <div class="fact-item"><span>到期日</span><strong>${asset.maturityDate}</strong></div>
+                <div class="fact-item"><span>出险日期</span><strong>${asset.defaultDate}</strong></div>
+                <div class="fact-item"><span>数据口径</span><strong>按出险认定日计算</strong></div>
+              </div>
+            </section>
+
+            <section class="card card-pad">
+              ${sectionHeading("业务信息", "资产事实")}
+              <div class="fact-grid" style="margin-top:12px">
+                <div class="fact-item"><span>成员公司</span><strong>${escapeHtml(asset.company)}</strong></div>
+                <div class="fact-item"><span>业务类型</span><strong>${escapeHtml(asset.businessType)}</strong></div>
+                <div class="fact-item span-2"><span>项目/证券/产品名称</span><strong>${escapeHtml(asset.projectName)}</strong></div>
+                <div class="fact-item"><span>资金来源</span><strong>${escapeHtml(asset.fundingSource)}</strong></div>
+                <div class="fact-item"><span>风险金额</span><strong>${asset.amount.toFixed(2)}亿元</strong></div>
+              </div>
+            </section>
+
+            <div class="bottom-actions">
+              <button class="button button-secondary" type="button" data-open-tracking data-asset-id="${asset.id}">加入重点跟踪</button>
+              <button class="button button-primary" type="button" data-action="scroll-full-fields">查看完整字段</button>
+            </div>
+
+            <section id="full-fields">
+              ${sectionHeading("完整业务字段", "资产事实")}
+              <dl class="card key-value-card" style="margin-top:12px">
+                <div class="key-value-row"><dt>投资组合</dt><dd>${escapeHtml(asset.portfolio)}</dd></div>
+                <div class="key-value-row"><dt>放款日</dt><dd>${escapeHtml(asset.disbursementDate)}</dd></div>
+                <div class="key-value-row"><dt>到期日</dt><dd>${escapeHtml(asset.maturityDate)}</dd></div>
+                <div class="key-value-row"><dt>担保方名称</dt><dd>${asset.guarantors.map(escapeHtml).join("<br>")}</dd></div>
+                <div class="key-value-row"><dt>出险类别</dt><dd>${escapeHtml(asset.defaultCategory)}（${escapeHtml(asset.defaultReason)}）</dd></div>
+                <div class="key-value-row"><dt>出险日期</dt><dd>${escapeHtml(asset.defaultDate)}</dd></div>
+                <div class="key-value-row"><dt>出险规模</dt><dd class="emphasis">${asset.amount.toFixed(2)}亿元</dd></div>
+              </dl>
+            </section>
+
+            <section class="card timeline-card">
+              ${sectionHeading("关键时间线", "按时间")}
+              <div class="timeline" style="margin-top:14px">${asset.timeline.map(item => timelineItem(item)).join("")}</div>
+            </section>
+
+            <div class="bottom-actions">
+              <button class="button button-secondary" type="button" data-open-report data-asset-id="${asset.id}">加入风险报告</button>
+              <button class="button button-primary" type="button" data-open-tracking data-asset-id="${asset.id}">加入重点跟踪</button>
+            </div>
+          </div>
+          ${bottomAskBar()}
+        </div>
+      `;
+    }
+
+    function renderTracking() {
+      const tracking = getTrackingState();
+      return `
+        <div class="page no-ask">
+          ${pageHeader("重点跟踪", `/credit/warning/assets/${tracking.assetId}`)}
+          <div class="page-content">
+            <section class="hero-card tracking-hero">
+              <div class="hero-topline">
+                <div style="display:flex;gap:6px;flex-wrap:wrap">${tag("出险", "default")}${tag("跟踪中", "tracking")}</div>
+                ${tag("演示数据", "demo")}
+              </div>
+              <h2 class="customer-title" style="font-size:18px;line-height:25px">${escapeHtml(tracking.subject)}</h2>
+              <p class="customer-group">关联资产：0.47亿元 · 租赁</p>
+              <div class="tracking-meta-grid">
+                <div class="tracking-meta"><span>责任人</span><strong>${escapeHtml(tracking.ownerDepartment)} · ${escapeHtml(tracking.ownerName)}</strong></div>
+                <div class="tracking-meta"><span>截止日期</span><strong>${escapeHtml(tracking.dueDate)}</strong></div>
+                <div class="tracking-meta"><span>跟踪频率</span><strong>${escapeHtml(tracking.frequency)}</strong></div>
+                <div class="tracking-meta"><span>最近更新</span><strong>${escapeHtml(tracking.latestUpdateAt)}</strong></div>
+              </div>
+            </section>
+
+            <section>
+              <div class="section-heading"><h2>最新进展</h2><button class="section-action" type="button" data-open-sheet="progress">✎ 更新</button></div>
+              <article class="card progress-card" style="margin-top:12px">
+                <div class="progress-box">
+                  <h3>${escapeHtml(tracking.progressTitle)}</h3>
+                  <p>${escapeHtml(tracking.progressText)}</p>
+                  <small>演示进展 · ${escapeHtml(tracking.latestUpdateAt)}</small>
+                </div>
+              </article>
+            </section>
+
+            <section class="card timeline-card">
+              ${sectionHeading("跟踪记录", "全部")}
+              <div class="timeline" style="margin-top:14px">${tracking.records.map(item => timelineItem(item)).join("")}</div>
+            </section>
+
+            <div class="bottom-actions">
+              <button class="button button-secondary" type="button" data-nav="/credit/warning/assets/${tracking.assetId}">查看原资产</button>
+              <button class="button button-primary" type="button" data-open-report data-asset-id="${tracking.assetId}">加入风险报告</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function getTrackingState() {
+      try {
+        const stored = JSON.parse(safeStorage.get("localStorage", "wd-tracking", "null") || "null");
+        return stored ? { ...DATA.tracking, ...stored } : DATA.tracking;
+      } catch { return DATA.tracking; }
+    }
+
+    function renderRoute() {
+      const current = parseLocation();
+      if (current.path === "/" || current.path === "/credit") {
+        location.replace(makeHash("/credit/warning"));
+        return;
+      }
+      let html = "";
+      if (current.path === "/credit/warning") html = renderOverview(current.query);
+      else if (current.path === "/credit/warning/prewarnings") html = renderPrewarnings(current.query);
+      else if (current.path === "/credit/warning/prewarnings/migrations") html = renderMigrations(current.query);
+      else if (current.path === "/credit/warning/prewarnings/customers") html = renderCustomerList("warning", current.query);
+      else if (current.path === "/credit/warning/defaults") html = renderDefaults(current.query);
+      else if (current.path === "/credit/warning/defaults/customers") html = renderCustomerList("default", current.query);
+      else if (current.path === "/credit/warning/customers/changning-shangyu") html = renderWarningCustomer();
+      else if (current.path === "/credit/warning/customers/guangxi-baise") html = renderDefaultCustomer();
+      else if (current.path.startsWith("/credit/warning/assets/")) {
+        const assetId = current.path.split("/").pop();
+        const asset = DATA.assets[assetId];
+        html = asset ? (asset.state === "major" ? renderWarningAsset(asset) : renderDefaultAsset(asset)) : renderNotFound();
+      } else if (current.path === "/watch/tracking/guangxi-baise-default") html = renderTracking();
+      else html = renderNotFound();
+
+      app.innerHTML = html;
+      renderOverlay(current);
+      restoreScroll(current.raw);
+      updateListSearchVisibility();
+      updateTrackingSubmitState();
+      trapFocusIfNeeded();
+    }
+
+    function renderNotFound() {
+      return `<div class="page no-ask">${pageHeader("页面未找到", "/credit/warning")}<div class="page-content"><section class="card empty-state"><span class="state-icon">?</span><h3>未找到该原型页面</h3><p>请返回预警出险总览继续浏览。</p><button class="button button-primary" type="button" data-nav="/credit/warning">返回总览</button></section></div></div>`;
+    }
+
+    function renderOverlay(current) {
+      document.querySelectorAll(".overlay").forEach(node => node.remove());
+      const sheet = current.query.get("sheet");
+      const copilot = current.query.get("copilot");
+      if (copilot) document.body.insertAdjacentHTML("beforeend", renderCopilot(current));
+      else if (sheet) document.body.insertAdjacentHTML("beforeend", renderSheet(sheet, current));
+      document.body.style.overflow = sheet || copilot ? "hidden" : "";
+    }
+
+    function renderSheet(sheet, current) {
+      if (sheet === "filter") return renderFilterSheet(current);
+      if (sheet === "tracking") return renderTrackingSheet(current);
+      if (sheet === "report") return renderReportSheet(current);
+      if (sheet === "metrics") return renderMetricsSheet();
+      if (sheet === "member") return renderMemberSheet(current);
+      if (sheet === "progress") return renderProgressSheet();
+      return "";
+    }
+
+    function overlayStart(title, subtitle = "") {
+      return `
+        <div class="overlay" role="presentation">
+          <button class="overlay-backdrop" type="button" data-close-overlay aria-label="关闭弹层"></button>
+          <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+            <div class="sheet-handle"></div>
+            <header class="sheet-header">
+              <div><h2 id="sheet-title">${escapeHtml(title)}</h2>${subtitle ? `<p>${escapeHtml(subtitle)}</p>` : ""}</div>
+              <button class="icon-button icon-small" type="button" data-close-overlay aria-label="关闭">×</button>
+            </header>
+      `;
+    }
+
+    function overlayEnd(footerHtml) {
+      return `<footer class="sheet-footer">${footerHtml}</footer></section></div>`;
+    }
+
+    function renderMetricsSheet() {
+      return `${overlayStart("指标口径", "解释总览中的客户数与资产金额")}
+        <div class="sheet-body">
+          <section class="sheet-section">
+            <h3>客户户数</h3>
+            <div class="notice-card" style="margin-top:10px"><span>按法人公司去重。法人客户存在任一出险资产时，只计入出险客户数。</span></div>
+          </section>
+          <section class="sheet-section">
+            <h3>风险资产金额</h3>
+            <div class="notice-card" style="margin-top:10px"><span>按每笔资产自身当前状态归类。同一法人客户名下可同时存在预警资产金额和出险资产金额。</span></div>
+          </section>
+          <section class="sheet-section">
+            <h3>新增重大预警</h3>
+            <div class="notice-card" style="margin-top:10px"><span>统计期内进入重大预警的规模，包括由二级预警升级为重大预警。</span></div>
+          </section>
+          <section class="sheet-section">
+            <h3>数据状态</h3>
+            <div class="notice-card" style="margin-top:10px"><span>真实零显示0；数据不可用显示“—”或“暂无数据”。</span></div>
+          </section>
+        </div>
+        ${overlayEnd(`<button class="button button-quiet" type="button" data-close-overlay>关闭</button><button class="button button-primary" type="button" data-close-overlay>我知道了</button>`)}
+      `;
+    }
+
+    function initFilterDraft(current) {
+      const isWarning = current.path.includes("prewarnings");
+      UI.sheetDraft = {
+        member: current.query.get("member") || "全部成员公司",
+        time: current.query.get("time") || (isWarning ? "本月新增" : "本月"),
+        category: current.query.get("category") || "全部类别",
+        sort: current.query.get("sort") || "amount"
+      };
+    }
+
+    function renderFilterSheet(current) {
+      const isWarning = current.path.includes("prewarnings");
+      if (!UI.sheetDraft) initFilterDraft(current);
+      const draft = UI.sheetDraft;
+      const memberOptions = ["全部成员公司", "医保科技", "租赁", "银行"];
+      const timeOptions = isWarning ? ["本月新增", "本日新增", "近3个月"] : ["本月", "本日", "近3个月"];
+      const sortOptions = [{v:"amount",l:"规模从高到低"},{v:"date",l:"按最近时间"}];
+      return `${overlayStart("筛选与排序", isWarning ? "重大预警法人客户" : "出险法人客户")}
+        <div class="sheet-body">
+          <section class="sheet-section"><h3>成员公司</h3><div class="option-wrap">${memberOptions.map(value => `<button class="option-chip ${draft.member === value ? "is-selected" : ""}" type="button" data-draft-key="member" data-draft-value="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div></section>
+          <section class="sheet-section"><h3>${isWarning ? "预警时间" : "出险日期"}</h3><div class="option-wrap">${timeOptions.map(value => `<button class="option-chip ${draft.time === value ? "is-selected" : ""}" type="button" data-draft-key="time" data-draft-value="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div></section>
+          ${isWarning ? "" : `<section class="sheet-section"><h3>出险类别</h3><div class="option-wrap">${["全部类别","逾期（本息实质逾期）","其他"].map(value => `<button class="option-chip ${draft.category === value ? "is-selected" : ""}" type="button" data-draft-key="category" data-draft-value="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div></section>`}
+          <section class="sheet-section"><h3>排序</h3><div class="option-wrap">${sortOptions.map(item => `<button class="option-chip ${draft.sort === item.v ? "is-selected" : ""}" type="button" data-draft-key="sort" data-draft-value="${item.v}">${item.l}</button>`).join("")}</div></section>
+        </div>
+        ${overlayEnd(`<button class="button button-secondary" type="button" data-action="reset-filter-draft">重置</button><button class="button button-primary" type="button" data-action="apply-filter-draft">应用筛选</button>`)}
+      `;
+    }
+
+    function renderMemberSheet(current) {
+      const selected = current.query.get("member") || "集团汇总";
+      return `${overlayStart("选择成员公司", "所有成员公司处于同一筛选层级")}
+        <div class="sheet-body"><div class="option-wrap">${DATA.memberCompanies.map(name => `<button class="option-chip ${selected === name ? "is-selected" : ""}" type="button" data-select-member-sheet="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join("")}</div><div class="notice-card" style="margin-top:16px"><span>当前原型仅提供集团汇总确认数据；其他成员公司会展示明确空状态。</span></div></div>
+        ${overlayEnd(`<button class="button button-quiet" type="button" data-close-overlay>取消</button><button class="button button-primary" type="button" data-set-member="${escapeHtml(selected)}">保持当前</button>`)}
+      `;
+    }
+
+    function renderTrackingSheet(current) {
+      const assetId = current.query.get("asset") || current.path.split("/").pop();
+      const asset = DATA.assets[assetId] || DATA.assets["guangxi-baise-047"];
+      return `${overlayStart("加入重点跟踪", "轻量连接风险跟踪，不改变风险状态")}
+        <div class="sheet-body">
+          <div class="form-stack">
+            <div class="form-row is-readonly"><label>跟踪主题</label><strong>${escapeHtml(asset.name.replace("有限公司", ""))}</strong></div>
+            <div class="form-row is-readonly"><label>责任成员公司</label><strong>${escapeHtml(asset.company)}</strong></div>
+            <label class="form-row"><span>责任人</span><select id="tracking-owner"><option value="">待选择</option><option value="李明" ${UI.trackingDraft.owner === "李明" ? "selected" : ""}>租赁风险管理部 · 李明</option><option value="王宁" ${UI.trackingDraft.owner === "王宁" ? "selected" : ""}>集团风险管理部 · 王宁</option></select></label>
+            <label class="form-row"><span>截止日期</span><input id="tracking-date" type="date" min="2026-06-24" value="${escapeHtml(UI.trackingDraft.dueDate)}"></label>
+            <label class="form-row"><span>跟踪频率</span><select id="tracking-frequency"><option value="weekly" ${UI.trackingDraft.frequency === "weekly" ? "selected" : ""}>每周</option><option value="daily" ${UI.trackingDraft.frequency === "daily" ? "selected" : ""}>每日</option><option value="monthly" ${UI.trackingDraft.frequency === "monthly" ? "selected" : ""}>每月</option></select></label>
+          </div>
+          <div class="notice-card" style="margin-top:16px"><strong>说明：</strong><span>责任人和期限属于跟踪模块字段；本模块仅提供发起入口。</span></div>
+        </div>
+        ${overlayEnd(`<button class="button button-secondary" type="button" data-close-overlay>取消</button><button class="button button-primary" id="tracking-submit" type="button" data-action="submit-tracking" data-asset-id="${asset.id}" disabled>确认加入</button>`)}
+      `;
+    }
+
+    function renderProgressSheet() {
+      return `${overlayStart("更新跟踪进展", "记录已确认的最新行动和结果")}
+        <div class="sheet-body"><textarea class="sheet-textarea" id="progress-input" placeholder="填写本次跟踪进展…">${escapeHtml(UI.progressDraft)}</textarea><div class="notice-card" style="margin-top:12px"><span>请记录事实、行动和下一次观察点；不要在此修改风险状态。</span></div></div>
+        ${overlayEnd(`<button class="button button-secondary" type="button" data-close-overlay>取消</button><button class="button button-primary" type="button" data-action="submit-progress">保存进展</button>`)}
+      `;
+    }
+
+    function renderReportSheet(current) {
+      const assetId = current.query.get("asset") || "guangxi-baise-047";
+      const asset = DATA.assets[assetId] || DATA.assets["guangxi-baise-047"];
+      const isDefault = asset.state === "default";
+      const summary = isDefault
+        ? `${asset.customerName}${asset.amount.toFixed(2)}亿元非标投资资产于${asset.defaultDate}因本息实质逾期出险。`
+        : `${asset.customerName}${asset.amount.toFixed(2)}亿元资产于${asset.warningDate}进入重大预警；当前未提供触发原因明细。`;
+      return `${overlayStart("加入风险报告", "将已确认事实加入报告草稿")}
+        <div class="sheet-body">
+          <div class="form-row is-readonly"><label>目标报告</label><strong>2026年6月集团风险周报</strong></div>
+          <div style="margin-top:6px">${tag("演示流程", "demo")}</div>
+          <section class="sheet-section"><h3>包含内容</h3>
+            <button class="check-row" type="button" data-report-key="riskFacts" data-checked="${UI.reportDraft.riskFacts}"><span>风险事实与${isDefault ? "出险" : "预警"}规模</span><span class="check-box">✓</span></button>
+            <button class="check-row" type="button" data-report-key="assetFields" data-checked="${UI.reportDraft.assetFields}"><span>完整资产字段</span><span class="check-box">✓</span></button>
+            <button class="check-row" type="button" data-report-key="tracking" data-checked="${UI.reportDraft.tracking}"><span>重点跟踪进展</span><span class="check-box">✓</span></button>
+          </section>
+          <section class="sheet-section"><h3>事实摘要预览</h3><div class="notice-card" style="margin-top:10px"><span>${escapeHtml(summary)}</span></div></section>
+        </div>
+        ${overlayEnd(`<button class="button button-secondary" type="button" data-close-overlay>取消</button><button class="button button-primary" type="button" data-action="submit-report">加入报告草稿</button>`)}
+      `;
+    }
+
+    function renderCopilot(current) {
+      const question = UI.copilotQuestion;
+      const answerType = question.includes("广西") ? "guangxi" : question.includes("常宁") ? "changning" : "summary";
+      let facts = "";
+      let keyItems = "";
+      if (answerType === "guangxi") {
+        const asset = DATA.assets["guangxi-baise-047"];
+        facts = `<div class="copilot-metrics"><div class="copilot-metric"><span>出险规模</span><strong>0.47亿元</strong><em>租赁</em></div><div class="copilot-metric"><span>出险日期</span><strong style="font-size:16px">2026-06-01</strong><em>逾期9天</em></div></div>`;
+        keyItems = `${asset.customerName}的非标投资资产因本息实质逾期出险；到期日为${asset.maturityDate}，两家担保方信息已记录。`;
+      } else if (answerType === "changning") {
+        facts = `<div class="copilot-metrics"><div class="copilot-metric"><span>重大预警规模</span><strong>0.25亿元</strong><em>医保科技</em></div><div class="copilot-metric"><span>预警日期</span><strong style="font-size:16px">2026-06-23</strong><em>原因暂无明细</em></div></div>`;
+        keyItems = `常宁市尚宇高级中学有限公司已进入重大预警；当前结构化数据未提供触发原因，不进行补充推断。`;
+      } else {
+        facts = `<div class="copilot-metrics"><div class="copilot-metric"><span>新增重大预警</span><strong>0.60亿元</strong><em>涉及5户</em></div><div class="copilot-metric"><span>新增出险</span><strong>0.83亿元</strong><em>涉及7户</em></div></div>`;
+        keyItems = `出险：广西百色试验区发展集团有限公司0.47亿元。重大预警：常宁市尚宇高级中学有限公司0.25亿元。`;
+      }
+      return `
+        <div class="overlay" role="presentation">
+          <button class="overlay-backdrop" type="button" data-close-overlay aria-label="关闭AI风控助手"></button>
+          <section class="copilot-sheet" role="dialog" aria-modal="true" aria-labelledby="copilot-title">
+            <header class="copilot-header">
+              <div class="copilot-mark">AI</div>
+              <div><h2 id="copilot-title">AI 风控助手</h2><p>正在基于“预警与出险”结构化数据查询</p></div>
+              <button class="icon-button icon-small" type="button" data-close-overlay aria-label="关闭">×</button>
+            </header>
+            <div class="copilot-body">
+              <div class="user-bubble">${escapeHtml(question)}</div>
+              <div class="assistant-kicker"><span class="mini-ai">AI</span><span>基于当前页面结构化数据查询</span></div>
+              <section class="copilot-block">${tag("业务事实", "fact")}${facts}<p>数据截至 ${DATA.asOfDate}。</p></section>
+              <section class="copilot-block"><h3>已确认的重点新增事项</h3><p>${escapeHtml(keyItems)}</p></section>
+              <section class="copilot-block"><h3>结论类型</h3><p><strong>AI推断：无。</strong> 本回答仅汇总已确认结构化事实，不进行风险预测或处置建议。</p></section>
+            </div>
+            <form class="copilot-input" id="copilot-form"><input id="copilot-question" value="" placeholder="继续追问预警、出险或成员公司…" aria-label="继续追问"><button class="send-button" type="submit" aria-label="发送">➤</button></form>
+          </section>
+        </div>
+      `;
+    }
+
+    function updateTrackingSubmitState() {
+      const button = document.getElementById("tracking-submit");
+      if (!button) return;
+      button.disabled = !(UI.trackingDraft.owner && UI.trackingDraft.dueDate);
+    }
+
+    function updateListSearchVisibility() {
+      const input = document.getElementById("list-search");
+      if (!input) return;
+      const value = input.value.trim().toLowerCase();
+      const items = [...document.querySelectorAll("[data-list-item]")];
+      items.forEach(item => item.classList.toggle("is-hidden", value && !item.dataset.search.includes(value)));
+    }
+
+    function closeOverlay() {
+      const current = parseLocation();
+      const params = new URLSearchParams(current.query);
+      params.delete("sheet");
+      params.delete("copilot");
+      params.delete("asset");
+      UI.sheetDraft = null;
+      history.replaceState(null, "", `#${current.path}${params.toString() ? `?${params.toString()}` : ""}`);
+      document.querySelectorAll(".overlay").forEach(node => node.remove());
+      document.body.style.overflow = "";
+      const trigger = document.querySelector("[data-overlay-trigger='last']");
+      if (trigger) trigger.focus();
+    }
+
+    function openOverlay(kind, assetId = "") {
+      document.querySelectorAll("[data-overlay-trigger='last']").forEach(node => node.removeAttribute("data-overlay-trigger"));
+      if (document.activeElement instanceof HTMLElement) document.activeElement.dataset.overlayTrigger = "last";
+      const current = parseLocation();
+      const params = new URLSearchParams(current.query);
+      if (kind === "copilot") params.set("copilot", "1");
+      else params.set("sheet", kind);
+      if (assetId) params.set("asset", assetId);
+      history.pushState(null, "", `#${current.path}?${params.toString()}`);
+      renderRoute();
+    }
+
+    function trapFocusIfNeeded() {
+      const dialog = document.querySelector('[role="dialog"]');
+      if (!dialog) return;
+      const focusables = [...dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')];
+      (focusables[0] || dialog).focus?.();
+      dialog.addEventListener("keydown", event => {
+        if (event.key === "Escape") { event.preventDefault(); closeOverlay(); return; }
+        if (event.key !== "Tab" || focusables.length < 2) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }, { once: false });
+    }
+
+    document.addEventListener("click", event => {
+      const target = event.target.closest("button, [data-nav], [data-list-item]");
+      if (!target) return;
+
+      if (target.matches("[data-back]")) {
+        saveScroll(parseLocation().raw);
+        if (history.length > 1) history.back();
+        else navigate(target.dataset.fallback || "/credit/warning");
+        return;
+      }
+      if (target.matches("[data-share]")) { shareCurrent(); return; }
+      if (target.matches("[data-close-overlay]")) { closeOverlay(); return; }
+      if (target.matches("[data-open-copilot]")) { openOverlay("copilot"); return; }
+      if (target.matches("[data-open-sheet]")) { openOverlay(target.dataset.openSheet); return; }
+      if (target.matches("[data-open-tracking]")) { openOverlay("tracking", target.dataset.assetId); return; }
+      if (target.matches("[data-open-report]")) { openOverlay("report", target.dataset.assetId); return; }
+      if (target.matches("[data-period]")) {
+        replaceQuery({ period: target.dataset.period });
+        renderRoute();
+        return;
+      }
+      if (target.matches("[data-set-member]")) {
+        const current = parseLocation();
+        const params = new URLSearchParams(current.query);
+        params.set("member", target.dataset.setMember);
+        params.delete("sheet");
+        history.replaceState(null, "", `#${current.path}?${params.toString()}`);
+        UI.sheetDraft = null;
+        renderRoute();
+        return;
+      }
+      if (target.matches("[data-select-member-sheet]")) {
+        const current = parseLocation();
+        const params = new URLSearchParams(current.query);
+        params.set("member", target.dataset.selectMemberSheet);
+        params.delete("sheet");
+        history.replaceState(null, "", `#${current.path}?${params.toString()}`);
+        renderRoute();
+        return;
+      }
+      if (target.matches("[data-draft-key]")) {
+        UI.sheetDraft[target.dataset.draftKey] = target.dataset.draftValue;
+        renderRoute();
+        return;
+      }
+      if (target.matches("[data-report-key]")) {
+        const key = target.dataset.reportKey;
+        UI.reportDraft[key] = !UI.reportDraft[key];
+        renderRoute();
+        return;
+      }
+      if (target.matches("[data-nav]")) {
+        const path = target.dataset.nav;
+        const query = {};
+        if (target.dataset.queryGrade) query.grade = target.dataset.queryGrade;
+        navigate(path, query);
+        return;
+      }
+
+      const action = target.dataset.action;
+      if (!action) return;
+      if (action === "non-scope-tab") showToast("本交互原型仅覆盖“预警与出险”模块");
+      else if (action === "open-prewarnings") navigate("/credit/warning/prewarnings");
+      else if (action === "open-migration") navigate("/credit/warning/prewarnings/migrations");
+      else if (action === "open-warning-customers") navigate("/credit/warning/prewarnings/customers");
+      else if (action === "open-default-customers") navigate("/credit/warning/defaults/customers");
+      else if (action === "open-metrics") openOverlay("metrics");
+      else if (action === "open-member-sheet") openOverlay("member");
+      else if (action === "show-all-history") showToast("已展示当前提供的全部状态记录");
+      else if (action === "scroll-full-fields") document.getElementById("full-fields")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      else if (action === "reset-filter-draft") {
+        const current = parseLocation();
+        initFilterDraft({ ...current, query: new URLSearchParams() });
+        renderRoute();
+      }
+      else if (action === "apply-filter-draft") {
+        const current = parseLocation();
+        const params = new URLSearchParams(current.query);
+        params.delete("sheet");
+        params.set("member", UI.sheetDraft.member);
+        params.set("time", UI.sheetDraft.time);
+        params.set("sort", UI.sheetDraft.sort);
+        if (!current.path.includes("prewarnings")) params.set("category", UI.sheetDraft.category);
+        history.replaceState(null, "", `#${current.path}?${params.toString()}`);
+        UI.sheetDraft = null;
+        renderRoute();
+        showToast("筛选条件已应用");
+      }
+      else if (action === "reset-list-filters") {
+        const current = parseLocation();
+        history.replaceState(null, "", `#${current.path}`);
+        renderRoute();
+      }
+      else if (action === "retry-list") {
+        replaceQuery({ state: null });
+        renderRoute();
+        showToast("列表已重新加载");
+      }
+      else if (action === "submit-tracking") submitTracking(target.dataset.assetId);
+      else if (action === "submit-progress") submitProgress();
+      else if (action === "submit-report") submitReport();
+    });
+
+    document.addEventListener("change", event => {
+      const target = event.target;
+      if (target.id === "tracking-owner") { UI.trackingDraft.owner = target.value; updateTrackingSubmitState(); }
+      if (target.id === "tracking-date") { UI.trackingDraft.dueDate = target.value; updateTrackingSubmitState(); }
+      if (target.id === "tracking-frequency") { UI.trackingDraft.frequency = target.value; }
+      if (target.id === "migration-sort") { replaceQuery({ sort: target.value }); renderRoute(); }
+      if (target.id === "migration-member") { replaceQuery({ member: target.value }); renderRoute(); }
+    });
+
+    document.addEventListener("input", event => {
+      const target = event.target;
+      if (target.id === "list-search") {
+        replaceQuery({ q: target.value || null });
+        updateListSearchVisibility();
+      }
+      if (target.id === "progress-input") UI.progressDraft = target.value;
+    });
+
+    document.addEventListener("submit", event => {
+      if (event.target.id !== "copilot-form") return;
+      event.preventDefault();
+      const input = document.getElementById("copilot-question");
+      const value = input.value.trim();
+      if (!value) return;
+      UI.copilotQuestion = value;
+      renderRoute();
+    });
+
+    function submitTracking(assetId) {
+      if (!(UI.trackingDraft.owner && UI.trackingDraft.dueDate)) return;
+      const asset = DATA.assets[assetId] || DATA.assets["guangxi-baise-047"];
+      const frequencyMap = { weekly: "每周", daily: "每日", monthly: "每月" };
+      const stored = {
+        subject: asset.name,
+        assetId: asset.id,
+        company: asset.company,
+        ownerDepartment: UI.trackingDraft.owner === "李明" ? "租赁风险管理部" : "集团风险管理部",
+        ownerName: UI.trackingDraft.owner,
+        dueDate: UI.trackingDraft.dueDate,
+        frequency: frequencyMap[UI.trackingDraft.frequency],
+        latestUpdateAt: DATA.tracking.latestUpdateAt
+      };
+      safeStorage.set("localStorage", "wd-tracking", JSON.stringify(stored));
+      UI.trackingDraft = { owner: "", dueDate: "", frequency: "weekly" };
+      closeOverlay();
+      if (asset.state === "default") {
+        navigate("/watch/tracking/guangxi-baise-default");
+        setTimeout(() => showToast("已加入重点跟踪"), 80);
+      } else {
+        showToast("已加入重点跟踪");
+      }
+    }
+
+    function submitProgress() {
+      const value = UI.progressDraft.trim();
+      if (!value) { showToast("请填写跟踪进展", "error"); return; }
+      const stored = getTrackingState();
+      const next = {
+        ...stored,
+        progressTitle: "最新跟踪进展",
+        progressText: value,
+        latestUpdateAt: DATA.asOfDate,
+        records: [
+          { date: "06-24", title: "更新进展", description: value },
+          ...stored.records
+        ]
+      };
+      safeStorage.set("localStorage", "wd-tracking", JSON.stringify(next));
+      UI.progressDraft = "";
+      closeOverlay();
+      renderRoute();
+      showToast("跟踪进展已更新");
+    }
+
+    function submitReport() {
+      if (!Object.values(UI.reportDraft).some(Boolean)) { showToast("请至少选择一项报告内容", "error"); return; }
+      closeOverlay();
+      showToast("报告内容已准备");
+    }
+
+    window.addEventListener("hashchange", event => {
+      const oldHash = new URL(event.oldURL).hash.slice(1);
+      saveScroll(oldHash);
+      UI.sheetDraft = null;
+      renderRoute();
+    });
+
+    window.addEventListener("popstate", () => {
+      UI.sheetDraft = null;
+      renderRoute();
+    });
+
+    if (!location.hash) location.hash = "#/credit/warning";
+    else renderRoute();
+  </script>
+</body>
+</html>

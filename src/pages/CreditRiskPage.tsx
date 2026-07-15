@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent, type MutableRefObject } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Bookmark,
   Bot,
@@ -276,6 +276,10 @@ export function CreditRiskPage() {
     predictedSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  if (activeTab === "warning") {
+    return <Navigate to="/credit/warning" replace />;
+  }
+
   return (
     <div className="page credit-page">
       <div className="page-scroll credit-detail">
@@ -294,17 +298,20 @@ export function CreditRiskPage() {
           activeKey={activeTab}
           onChange={(key) => {
             setQuickQuestionsOpen(false);
+            if (key === "warning") {
+              navigate("/credit/warning");
+              return;
+            }
             setSearchParams({ tab: key });
           }}
         />
 
         {activeTab === "large" ? <LargeExposureHomeContent /> : null}
         {activeTab === "concentration" ? <ConcentrationTab /> : null}
-        {activeTab === "warning" ? <WarningDefaultTab predictedSectionRef={predictedSectionRef} onViewHighRisk={scrollToPredictedCustomers} /> : null}
       </div>
 
       <BottomAskBar
-        placeholder={activeTab === "large" ? "问大户风险、筛选客户、生成名单..." : activeTab === "warning" ? "问预警、查出险、生成迁徙报告…" : "问风险、生成报告、追踪预警…"}
+        placeholder={activeTab === "large" ? "问大户风险、筛选客户、生成名单..." : "问风险、生成报告、追踪预警…"}
         onOpen={() => {
           if (activeTab === "concentration") {
             setQuickQuestionsOpen(true);
@@ -315,7 +322,7 @@ export function CreditRiskPage() {
             context:
               activeTab === "large"
                 ? "正在分析“大户风险首页与 AI 推荐名单”"
-                : "正在分析“信用风险迁徙与预警出险”",
+                : "正在分析“信用集中度风险”",
           });
         }}
       />

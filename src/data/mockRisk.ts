@@ -23,6 +23,7 @@ export type AIAlertTickerItem = {
   id: string;
   title: string;
   isHot: boolean;
+  route?: string;
 };
 
 export type AIAlertNewsItem = {
@@ -195,9 +196,9 @@ export const homeEntries: HomeEntry[] = [
   {
     key: "investment",
     title: "投资风险",
-    subtitle: "组合风险\n压力测试",
-    temperatureLabel: "中等",
-    tagVariant: "watch",
+    subtitle: "规模 / 收益 / VaR",
+    temperatureLabel: "需关注",
+    tagVariant: "mediumHigh",
     visualType: "donut",
   },
   {
@@ -491,6 +492,12 @@ export const reminders: Reminder[] = [
 
 export const aiAlertTickerItems: AIAlertTickerItem[] = [
   {
+    id: "alert-investment-cii",
+    title: "CII 月度综合投资收益率转负",
+    isHot: true,
+    route: "/investment/changes/cii-monthly-negative",
+  },
+  {
     id: "alert-001",
     title: "重点客户出现舆情预警",
     isHot: true,
@@ -528,6 +535,15 @@ export const aiAlertTickerItems: AIAlertTickerItem[] = [
 ];
 
 export const aiAlertNewsItems: AIAlertNewsItem[] = [
+  {
+    id: "news-investment-cii",
+    time: "09:32",
+    isNew: true,
+    title: "CII 月度综合投资收益率转负",
+    summary: "月度综合投资收益率为 -2.47%，较上月下降 70bp，建议关注连续性。",
+    tags: ["投资风险"],
+    route: "/investment/changes/cii-monthly-negative",
+  },
   {
     id: "news-001",
     time: "09:25",

@@ -109,7 +109,7 @@ export function HomePage() {
                 key={`${activeAlertIndex}-${alert.id}`}
                 onClick={(event) => {
                   event.stopPropagation();
-                  openReminderTimeline();
+                  navigate(alert.route ?? "/risk/ai-alerts", { state: { returnTo: "/" } });
                 }}
               >
                 <i aria-hidden="true" />
