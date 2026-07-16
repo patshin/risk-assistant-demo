@@ -81,6 +81,8 @@ Do not invent page-specific title sizes, arbitrary icon sizes, or custom card rh
 
 Avoid dense tablet-style layouts, tiny text, awkward label wrapping, multi-line chips, and dashboard-like information walls.
 
+Capsule labels, status tags, badges, and chip buttons must vertically center their content with `inline-flex` or `flex`, `align-items: center`, and `justify-content: center`. Treat that layout mode as part of the shared component contract: do not override it with broad structural selectors such as `> span:first-child`; target a semantic class or explicitly exclude shared capsule classes. When touching a capsule, inspect the final computed styles after the full CSS cascade and verify the text is optically centered at the 390px mobile viewport.
+
 ## Code Style
 
 - Use TypeScript and React function components.

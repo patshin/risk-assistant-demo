@@ -701,7 +701,6 @@
   color: #a88e78;
 }
 
-.warning-total-hero > div > span:first-child,
 .warning-list-summary > div > span:first-child {
   display: block;
   color: var(--color-text-soft);
