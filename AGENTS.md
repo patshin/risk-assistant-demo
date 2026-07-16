@@ -127,6 +127,8 @@ Before redesigning from screenshots or business references:
 5. Summarize changed files, test results, and follow-up suggestions.
 6. Do not create or update AI working-log documents unless the user explicitly asks.
 
+This repository's GitHub remote uses SSH. Validate `git fetch`, `git pull`, and `git push` through Git/SSH, and do not require or ask for `gh auth` before those operations. Check `gh` authentication only when an operation actually uses the GitHub CLI and cannot be completed through the available GitHub connector.
+
 ## Do Not
 
 - Do not change business logic while performing documentation-only tasks.
