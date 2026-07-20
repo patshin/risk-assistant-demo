@@ -549,12 +549,58 @@
     .v3-brief .invest-metric .negative { color: var(--red); }
 
     /* History */
+    .v3-brief .history-month-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 106px;
+      margin-bottom: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .v3-brief .history-month-copy { min-width: 0; }
+    .v3-brief .history-month-copy h2 { margin: 0; font-size: 19px; line-height: 1.3; font-weight: 870; letter-spacing: -.1px; }
+    .v3-brief .history-month-copy p { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; font-weight: 700; }
+    .v3-brief .history-month-button {
+      min-height: var(--tap);
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(255, 253, 249, .96);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .v3-brief .history-month-button:active { background: var(--surface-2); }
     .v3-brief .history-list { display: grid; gap: 10px; }
     .v3-brief .history-card { padding: 15px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow); }
     .v3-brief .history-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
     .v3-brief .history-top strong { font-size: 16px; }
     .v3-brief .history-card p { margin: 8px 0 0; color: var(--ink-2); font-size: 14px; line-height: 1.55; }
     .v3-brief .history-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; color: var(--muted); font-size: 12px; }
+    .v3-brief .history-empty {
+      min-height: 124px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 700;
+      text-align: center;
+    }
 
     /* Unified composer exactly one floating element, no bottom board */
     .v3-brief .unified-composer {
@@ -669,6 +715,45 @@
     .v3-brief .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 20px; }
     .v3-brief .sheet-actions button { min-height: 46px; border: 1px solid var(--line); border-radius: 12px; background: white; color: var(--ink-2); font-size: 14px; font-weight: 800; cursor: pointer; }
     .v3-brief .sheet-actions .full { grid-column: 1/-1; border-color: transparent; background: var(--orange); color: white; }
+    .v3-brief .history-month-calendar { margin-top: 14px; }
+    .v3-brief .history-month-year {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 44px;
+      align-items: center;
+      min-height: 52px;
+      padding: 4px;
+      border-radius: 16px;
+      background: var(--surface-2);
+    }
+    .v3-brief .history-month-year strong { text-align: center; font-size: 18px; line-height: 1.25; font-weight: 860; }
+    .v3-brief .history-year-button {
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 13px;
+      background: transparent;
+      color: var(--ink-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .v3-brief .history-year-button:active { background: rgba(110, 78, 49, .08); }
+    .v3-brief .history-year-button svg { width: 20px; height: 20px; stroke-width: 2.1; }
+    .v3-brief .history-month-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .v3-brief .history-month-option {
+      min-height: 46px;
+      border: 1px solid transparent;
+      border-radius: 13px;
+      background: var(--surface-2);
+      color: var(--ink-2);
+      font-size: 15px;
+      line-height: 1;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .v3-brief .history-month-option:active { border-color: var(--line); background: var(--surface-3); }
+    .v3-brief .history-month-option.is-selected { border-color: var(--orange); background: var(--orange); color: white; box-shadow: 0 7px 16px rgba(255, 100, 0, .18); }
 
     /* AI sheet */
     .v3-brief .prompt-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }

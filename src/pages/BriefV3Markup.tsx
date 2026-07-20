@@ -1,11 +1,43 @@
 import type { RefObject } from "react";
 
+export const briefHistoryMonthOptions = [
+  { value: "01", label: "1月" },
+  { value: "02", label: "2月" },
+  { value: "03", label: "3月" },
+  { value: "04", label: "4月" },
+  { value: "05", label: "5月" },
+  { value: "06", label: "6月" },
+  { value: "07", label: "7月" },
+  { value: "08", label: "8月" },
+  { value: "09", label: "9月" },
+  { value: "10", label: "10月" },
+  { value: "11", label: "11月" },
+  { value: "12", label: "12月" },
+] as const;
+
+type BriefHistoryMonthNumber = (typeof briefHistoryMonthOptions)[number]["value"];
+
+export type BriefHistoryMonth = `${number}-${BriefHistoryMonthNumber}`;
+
+export const defaultBriefHistoryMonth: BriefHistoryMonth = "2026-07";
+
+export function isBriefHistoryMonth(value: string | undefined): value is BriefHistoryMonth {
+  return Boolean(value && /^\d{4}-(0[1-9]|1[0-2])$/.test(value));
+}
+
 type BriefV3MarkupProps = {
   rootRef: RefObject<HTMLDivElement | null>;
   onBack: () => void;
+  historyMonth: BriefHistoryMonth;
 };
 
-export function BriefV3Markup({ rootRef, onBack }: BriefV3MarkupProps) {
+export function BriefV3Markup({ rootRef, onBack, historyMonth }: BriefV3MarkupProps) {
+  const [selectedYear, selectedMonthNumber] = historyMonth.split("-");
+  const selectedMonth = briefHistoryMonthOptions.find((month) => month.value === selectedMonthNumber) ?? briefHistoryMonthOptions[0];
+  const hasBriefs = historyMonth === defaultBriefHistoryMonth;
+  const briefCount = hasBriefs ? 16 : 0;
+  const updateCount = hasBriefs ? 3 : 0;
+
   return (
     <div className="v3-brief" ref={rootRef}>
 <main className="app" id="app">
@@ -264,7 +296,18 @@ export function BriefV3Markup({ rootRef, onBack }: BriefV3MarkupProps) {
       </section>
 
       <section className="tab-panel" id="panel-history" role="tabpanel" hidden>
-        <div className="history-list"><article className="history-card"><div className="history-top"><strong>7月16日 · 今日</strong><span className="status-pill mid">10:15有更新</span></div><p>信用风险升温，投资端月度收益转负；流动性与操作风险稳定。</p><div className="history-meta"><span>07:30初始版</span><span>5项知悉</span><span>1项待推动</span></div></article><article className="history-card"><div className="history-top"><strong>7月15日 · 星期三</strong><span className="status-pill ok">已发布</span></div><p>地产链预警资产小幅上升，宏观与投资风险无重大变化。</p><div className="history-meta"><span>07:30版</span><span>2项重点变化</span></div></article><article className="history-card"><div className="history-top"><strong>7月14日 · 星期二</strong><span className="status-pill ok">已发布</span></div><p>信用端新增重大预警1户；操作风险完成1项整改关闭。</p><div className="history-meta"><span>07:30版</span><span>3项重点变化</span></div></article></div>
+        <article className="history-month-card" aria-live="polite">
+          <div className="history-month-copy">
+            <h2>{selectedYear}年{selectedMonth.label}</h2>
+            <p>共 {briefCount} 份综合日报 · {updateCount} 次增量更新</p>
+          </div>
+          <button className="history-month-button" id="historyMonthButton" type="button" aria-haspopup="dialog">选择月份</button>
+        </article>
+        {hasBriefs ? (
+          <div className="history-list"><article className="history-card"><div className="history-top"><strong>7月16日 · 今日</strong><span className="status-pill mid">10:15有更新</span></div><p>信用风险升温，投资端月度收益转负；流动性与操作风险稳定。</p><div className="history-meta"><span>07:30初始版</span><span>5项知悉</span><span>1项待推动</span></div></article><article className="history-card"><div className="history-top"><strong>7月15日 · 星期三</strong><span className="status-pill ok">已发布</span></div><p>地产链预警资产小幅上升，宏观与投资风险无重大变化。</p><div className="history-meta"><span>07:30版</span><span>2项重点变化</span></div></article><article className="history-card"><div className="history-top"><strong>7月14日 · 星期二</strong><span className="status-pill ok">已发布</span></div><p>信用端新增重大预警1户；操作风险完成1项整改关闭。</p><div className="history-meta"><span>07:30版</span><span>3项重点变化</span></div></article></div>
+        ) : (
+          <div className="history-empty" role="status">该月暂无历史简报</div>
+        )}
       </section>
     </div>
 

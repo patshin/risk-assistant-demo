@@ -1,6 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BriefV3Markup } from "./BriefV3Markup";
+import {
+  BriefV3Markup,
+  briefHistoryMonthOptions,
+  defaultBriefHistoryMonth,
+  isBriefHistoryMonth,
+  type BriefHistoryMonth,
+} from "./BriefV3Markup";
 import "./brief-v3.css";
 
 type EventSheetData = {
@@ -44,6 +50,7 @@ const workbenchLabels = new Set(["进入工作台", "进入个人工作台", "�
 export function BriefDetailPage() {
   const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement>(null);
+  const [historyMonth, setHistoryMonth] = useState<BriefHistoryMonth>(defaultBriefHistoryMonth);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -59,6 +66,7 @@ export function BriefDetailPage() {
     let toastTimer: number | undefined;
     const answerTimers = new Set<number>();
     let lastFocused: HTMLElement | null = null;
+    let monthPickerYear = Number(historyMonth.slice(0, 4));
     const previousBodyOverflow = document.body.style.overflow;
     const previousShellOverflow = phoneShell?.style.overflowY ?? "";
 
@@ -197,6 +205,29 @@ export function BriefDetailPage() {
         openSheet(editionSheet());
         return;
       }
+      if (button?.id === "historyMonthButton") {
+        monthPickerYear = Number(historyMonth.slice(0, 4));
+        openSheet(historyMonthSheet(historyMonth, monthPickerYear));
+        return;
+      }
+
+      const historyYearShift = target.closest<HTMLElement>("[data-history-year-shift]");
+      if (historyYearShift) {
+        const shift = Number(historyYearShift.dataset.historyYearShift);
+        if (shift === -1 || shift === 1) {
+          monthPickerYear += shift;
+          sheetContent.innerHTML = historyMonthSheet(historyMonth, monthPickerYear);
+          window.setTimeout(() => sheetContent.querySelector<HTMLButtonElement>(`[data-history-year-shift="${shift}"]`)?.focus(), 20);
+        }
+        return;
+      }
+
+      const historyMonthOption = target.closest<HTMLElement>("[data-history-month]");
+      if (historyMonthOption && isBriefHistoryMonth(historyMonthOption.dataset.historyMonth)) {
+        setHistoryMonth(historyMonthOption.dataset.historyMonth);
+        closeSheet();
+        return;
+      }
 
       if (target.closest("[data-open-ai]")) {
         openAI();
@@ -308,9 +339,9 @@ export function BriefDetailPage() {
       unlockScroll();
       delete (window as Window & { __prototypeReady?: boolean }).__prototypeReady;
     };
-  }, [navigate]);
+  }, [historyMonth, navigate]);
 
-  return <BriefV3Markup rootRef={rootRef} onBack={() => navigate("/")} />;
+  return <BriefV3Markup rootRef={rootRef} onBack={() => navigate("/")} historyMonth={historyMonth} />;
 }
 
 function closeIcon() {
@@ -334,4 +365,20 @@ function disposalSheet() {
 
 function editionSheet() {
   return `<div class="sheet-head"><div><h2 id="sheetTitle">选择日报版次</h2><p>新信息不会静默覆盖已发布日报</p></div><button class="sheet-close" type="button" data-close-sheet aria-label="关闭">${closeIcon()}</button></div><div class="sheet-section"><div class="evidence-list"><button class="evidence-item" style="text-align:left;width:100%" type="button" data-edition="0730"><div class="evidence-top"><strong>07:30 初始版</strong><em>当前</em></div><small>12/13数据源就绪 · 3项重点变化</small></button><button class="evidence-item" style="text-align:left;width:100%" type="button" data-edition="1015"><div class="evidence-top"><strong>10:15 增量版</strong><em class="pending">待重阅</em></div><small>新增1项重大预警，华东建设处置进展更新</small></button></div></div>`;
+}
+
+function historyMonthSheet(selectedMonth: BriefHistoryMonth, visibleYear: number) {
+  const options = briefHistoryMonthOptions.map((month) => {
+    const value = `${visibleYear}-${month.value}`;
+    const isSelected = value === selectedMonth;
+    return `<button class="history-month-option${isSelected ? " is-selected" : ""}" type="button" role="radio" aria-checked="${isSelected}" data-history-month="${value}">${month.label}</button>`;
+  }).join("");
+
+  return `<div class="sheet-head"><div><h2 id="sheetTitle">选择月份</h2><p>按年份查看历史简报</p></div><button class="sheet-close" type="button" data-close-sheet aria-label="关闭">${closeIcon()}</button></div><div class="history-month-calendar"><div class="history-month-year"><button class="history-year-button" type="button" data-history-year-shift="-1" aria-label="上一年">${calendarChevronIcon("previous")}</button><strong aria-live="polite">${visibleYear}年</strong><button class="history-year-button" type="button" data-history-year-shift="1" aria-label="下一年">${calendarChevronIcon("next")}</button></div><div class="history-month-options" role="radiogroup" aria-label="${visibleYear}年月份">${options}</div></div>`;
+}
+
+function calendarChevronIcon(direction: "previous" | "next") {
+  return direction === "previous"
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m15 18-6-6 6-6"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m9 18 6-6-6-6"/></svg>';
 }
