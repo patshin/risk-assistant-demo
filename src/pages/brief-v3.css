@@ -739,6 +739,11 @@
       cursor: pointer;
     }
     .v3-brief .history-year-button:active { background: rgba(110, 78, 49, .08); }
+    .v3-brief .history-year-button:disabled {
+      background: transparent;
+      color: rgba(91, 79, 68, .28);
+      cursor: not-allowed;
+    }
     .v3-brief .history-year-button svg { width: 20px; height: 20px; stroke-width: 2.1; }
     .v3-brief .history-month-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
     .v3-brief .history-month-option {
@@ -754,6 +759,17 @@
     }
     .v3-brief .history-month-option:active { border-color: var(--line); background: var(--surface-3); }
     .v3-brief .history-month-option.is-selected { border-color: var(--orange); background: var(--orange); color: white; box-shadow: 0 7px 16px rgba(255, 100, 0, .18); }
+    .v3-brief .history-month-option:disabled {
+      border-color: transparent;
+      background: rgba(111, 94, 78, .055);
+      color: rgba(91, 79, 68, .34);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    .v3-brief .history-month-option:disabled:active {
+      border-color: transparent;
+      background: rgba(111, 94, 78, .055);
+    }
 
     /* AI sheet */
     .v3-brief .prompt-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }

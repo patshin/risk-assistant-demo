@@ -21,6 +21,10 @@ export type BriefHistoryMonth = `${number}-${BriefHistoryMonthNumber}`;
 
 export const defaultBriefHistoryMonth: BriefHistoryMonth = "2026-07";
 
+export const briefHistoryMonthsWithData: ReadonlySet<BriefHistoryMonth> = new Set([
+  defaultBriefHistoryMonth,
+]);
+
 export function isBriefHistoryMonth(value: string | undefined): value is BriefHistoryMonth {
   return Boolean(value && /^\d{4}-(0[1-9]|1[0-2])$/.test(value));
 }
@@ -34,7 +38,7 @@ type BriefV3MarkupProps = {
 export function BriefV3Markup({ rootRef, onBack, historyMonth }: BriefV3MarkupProps) {
   const [selectedYear, selectedMonthNumber] = historyMonth.split("-");
   const selectedMonth = briefHistoryMonthOptions.find((month) => month.value === selectedMonthNumber) ?? briefHistoryMonthOptions[0];
-  const hasBriefs = historyMonth === defaultBriefHistoryMonth;
+  const hasBriefs = briefHistoryMonthsWithData.has(historyMonth);
   const briefCount = hasBriefs ? 16 : 0;
   const updateCount = hasBriefs ? 3 : 0;
 

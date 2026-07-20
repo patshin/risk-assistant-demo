@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   BriefV3Markup,
   briefHistoryMonthOptions,
+  briefHistoryMonthsWithData,
   defaultBriefHistoryMonth,
   isBriefHistoryMonth,
   type BriefHistoryMonth,
@@ -223,7 +224,11 @@ export function BriefDetailPage() {
       }
 
       const historyMonthOption = target.closest<HTMLElement>("[data-history-month]");
-      if (historyMonthOption && isBriefHistoryMonth(historyMonthOption.dataset.historyMonth)) {
+      if (
+        historyMonthOption instanceof HTMLButtonElement
+        && !historyMonthOption.disabled
+        && isBriefHistoryMonth(historyMonthOption.dataset.historyMonth)
+      ) {
         setHistoryMonth(historyMonthOption.dataset.historyMonth);
         closeSheet();
         return;
@@ -368,13 +373,21 @@ function editionSheet() {
 }
 
 function historyMonthSheet(selectedMonth: BriefHistoryMonth, visibleYear: number) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
   const options = briefHistoryMonthOptions.map((month) => {
-    const value = `${visibleYear}-${month.value}`;
+    const value: BriefHistoryMonth = `${visibleYear}-${month.value}`;
     const isSelected = value === selectedMonth;
-    return `<button class="history-month-option${isSelected ? " is-selected" : ""}" type="button" role="radio" aria-checked="${isSelected}" data-history-month="${value}">${month.label}</button>`;
+    const isFuture = visibleYear > currentYear || (visibleYear === currentYear && Number(month.value) > currentMonth);
+    const hasData = briefHistoryMonthsWithData.has(value);
+    const isDisabled = isFuture || !hasData;
+    const disabledReason = isFuture ? "月份未到" : "暂无历史简报";
+    return `<button class="history-month-option${isSelected ? " is-selected" : ""}" type="button" role="radio" aria-checked="${isSelected}" aria-disabled="${isDisabled}" aria-label="${month.label}${isDisabled ? `，${disabledReason}` : ""}" data-history-month="${value}"${isDisabled ? " disabled" : ""}>${month.label}</button>`;
   }).join("");
 
-  return `<div class="sheet-head"><div><h2 id="sheetTitle">选择月份</h2><p>按年份查看历史简报</p></div><button class="sheet-close" type="button" data-close-sheet aria-label="关闭">${closeIcon()}</button></div><div class="history-month-calendar"><div class="history-month-year"><button class="history-year-button" type="button" data-history-year-shift="-1" aria-label="上一年">${calendarChevronIcon("previous")}</button><strong aria-live="polite">${visibleYear}年</strong><button class="history-year-button" type="button" data-history-year-shift="1" aria-label="下一年">${calendarChevronIcon("next")}</button></div><div class="history-month-options" role="radiogroup" aria-label="${visibleYear}年月份">${options}</div></div>`;
+  const isCurrentYear = visibleYear >= currentYear;
+  return `<div class="sheet-head"><div><h2 id="sheetTitle">选择月份</h2><p>按年份查看历史简报</p></div><button class="sheet-close" type="button" data-close-sheet aria-label="关闭">${closeIcon()}</button></div><div class="history-month-calendar"><div class="history-month-year"><button class="history-year-button" type="button" data-history-year-shift="-1" aria-label="上一年">${calendarChevronIcon("previous")}</button><strong aria-live="polite">${visibleYear}年</strong><button class="history-year-button" type="button" data-history-year-shift="1" aria-label="下一年"${isCurrentYear ? " disabled aria-disabled=\"true\"" : ""}>${calendarChevronIcon("next")}</button></div><div class="history-month-options" role="radiogroup" aria-label="${visibleYear}年月份">${options}</div></div>`;
 }
 
 function calendarChevronIcon(direction: "previous" | "next") {
