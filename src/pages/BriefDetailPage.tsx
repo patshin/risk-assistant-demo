@@ -310,7 +310,7 @@ export function BriefDetailPage() {
     };
   }, [navigate]);
 
-  return <BriefV3Markup rootRef={rootRef} />;
+  return <BriefV3Markup rootRef={rootRef} onBack={() => navigate("/")} />;
 }
 
 function closeIcon() {

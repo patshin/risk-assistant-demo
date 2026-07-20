@@ -1,14 +1,17 @@
 import type { RefObject } from "react";
 
-type BriefV3MarkupProps = { rootRef: RefObject<HTMLDivElement | null> };
+type BriefV3MarkupProps = {
+  rootRef: RefObject<HTMLDivElement | null>;
+  onBack: () => void;
+};
 
-export function BriefV3Markup({ rootRef }: BriefV3MarkupProps) {
+export function BriefV3Markup({ rootRef, onBack }: BriefV3MarkupProps) {
   return (
     <div className="v3-brief" ref={rootRef}>
 <main className="app" id="app">
     <div className="page">
       <header className="topbar">
-        <button className="icon-button" type="button" aria-label="返回" data-toast="已返回风险简报入口">
+        <button className="icon-button" type="button" aria-label="返回" onClick={onBack}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
         </button>
         <h1>今日风险简报</h1>
