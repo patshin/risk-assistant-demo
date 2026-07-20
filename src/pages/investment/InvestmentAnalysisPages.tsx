@@ -8,10 +8,11 @@ import {
   Delta,
   HorizontalBars,
   InvestmentPage,
+  VarFactorList,
   VarTrendSection,
-  VarGauge,
   type InvestmentRouteState,
 } from "../../components/investment";
+import { GroupVarOverviewCard } from "../../components/investment/GroupVarOverviewCard";
 import {
   CiiAnnualRanking,
   CiiAttention,
@@ -31,6 +32,10 @@ import {
   getCiiViewMetricIds,
   getSnapshotForSearch,
   isCiiViewId,
+  metricDelta,
+  selectRemainingVarLimit,
+  selectVarFactorItems,
+  selectVarLimitUsage,
 } from "../../data/investmentRisk";
 
 function ErrorState({ onRetry }: { onRetry: () => void }) {
@@ -43,18 +48,24 @@ export function InvestmentVarPage() {
   const { snapshot, error } = getSnapshotForSearch(location.search);
   const ranking = snapshot.members.filter((member) => member.varValue !== null).sort((a, b) => (b.varValue ?? 0) - (a.varValue ?? 0));
   const factorMax = Math.max(...snapshot.members.flatMap((member) => Object.values(member.factorVar).filter((value): value is number => value !== null)), 1);
+  const groupVar = snapshot.metrics.totalVar.value;
+  const groupLimit = snapshot.metrics.varLimit.value;
+  const groupVarDelta = metricDelta(snapshot.metrics.totalVar, "previousMonth");
+  const limitUsage = selectVarLimitUsage(snapshot);
+  const remainingLimit = selectRemainingVarLimit(snapshot);
+  const factorItems = selectVarFactorItems(snapshot);
 
   return (
     <InvestmentPage title="VaR 分析" subtitle={`${snapshot.periodLabel} · VaR 计量资产`} snapshot={snapshot} sourceContext={{ metricIds: ["totalVar", "varUsage", "varDelta"] }}>
       {error ? <ErrorState onRetry={() => navigate(location.pathname, { replace: true })} /> : (
         <>
-          <section className="investment-var-hero">
-            <div className="investment-var-hero__value"><span>集团 VaR</span><strong>{formatNumber(snapshot.metrics.totalVar.value)}<em>{snapshot.metrics.totalVar.value === null ? "" : "亿元"}</em></strong></div>
-            <div className="investment-var-hero__change">
-              {snapshot.metrics.varDelta.value === null ? <small>暂无环比数据</small> : <Delta value={snapshot.metrics.varDelta.value} suffix=" 亿元较上月" />}
-            </div>
-            <VarGauge value={snapshot.metrics.totalVar.value} limit={snapshot.metrics.varLimit.value} />
-          </section>
+          <GroupVarOverviewCard
+            value={groupVar}
+            previousMonthDelta={groupVarDelta}
+            limit={groupLimit}
+            limitUsage={limitUsage}
+            remainingLimit={remainingLimit}
+          />
 
           <section className="investment-section">
             <SectionTitle title="近 6 个月 VaR 趋势" />
@@ -62,16 +73,11 @@ export function InvestmentVarPage() {
           </section>
 
           <section className="investment-section">
-            <SectionTitle title="主要风险因子" />
-            <div className="investment-factor-grid">
-              {snapshot.varFactors.map((factor) => (
-                <article key={factor.id}>
-                  <div><span>{factor.name}</span><strong>{factor.value}<em>亿元</em></strong></div>
-                  <div className="investment-factor-track"><i style={{ width: `${Math.max(4, factor.value / Math.max(...snapshot.varFactors.map((item) => item.value)) * 100)}%` }} /></div>
-                  <small>上月 {factor.previousValue} 亿 · {factor.description}</small>
-                </article>
-              ))}
+            <div className="var-factor-section-heading">
+              <SectionTitle title="主要风险因子" />
+              <span>单位：亿元</span>
             </div>
+            <VarFactorList items={factorItems} />
             <p className="investment-boundary-note"><CircleAlert size={15} />因子 VaR 反映敏感度，彼此相关，不能相加得到集团 VaR。</p>
           </section>
 

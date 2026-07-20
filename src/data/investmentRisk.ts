@@ -69,8 +69,16 @@ export type FactorId = "interestRate" | "equity" | "currency";
 export type VarFactor = {
   id: FactorId;
   name: string;
-  value: number;
-  previousValue: number;
+  value: number | null;
+  previousValue: number | null;
+  description: string;
+};
+
+export type VarFactorItem = {
+  id: FactorId;
+  label: string;
+  value: number | null;
+  previousMonthValue: number | null;
   description: string;
 };
 
@@ -501,6 +509,19 @@ export function formatNumber(value: number | null, precision = 0) {
   return new Intl.NumberFormat("zh-CN", { minimumFractionDigits: precision, maximumFractionDigits: precision }).format(value);
 }
 
+export function formatAmount(value: number | null, precision = 0) {
+  return formatNumber(value, precision);
+}
+
+export function formatSignedAmount(value: number | null, precision = 0) {
+  if (value === null) return "—";
+  return `${value > 0 ? "+" : ""}${formatAmount(value, precision)}`;
+}
+
+export function formatPercent(value: number | null, precision = 1) {
+  return value === null ? "—" : `${formatNumber(value * 100, precision)}%`;
+}
+
 export function formatMetricParts(metric: Metric, signed = false) {
   if (metric.value === null) return { value: "—", unit: "" };
   const sign = signed && metric.value > 0 ? "+" : "";
@@ -524,6 +545,30 @@ export function metricPercentDelta(metric: Metric, basis: MetricCompareBasis) {
   const baseline = metric.comparisonValues?.[basis];
   if (metric.value === null || baseline === undefined || baseline === 0) return null;
   return ((metric.value - baseline) / baseline) * 100;
+}
+
+export function selectVarLimitUsage(snapshot: InvestmentRiskSnapshot) {
+  const value = snapshot.metrics.totalVar?.value;
+  const limit = snapshot.metrics.varLimit?.value;
+  if (value === null || value === undefined || limit === null || limit === undefined || limit <= 0) return null;
+  return value / limit;
+}
+
+export function selectRemainingVarLimit(snapshot: InvestmentRiskSnapshot) {
+  const value = snapshot.metrics.totalVar?.value;
+  const limit = snapshot.metrics.varLimit?.value;
+  if (value === null || value === undefined || limit === null || limit === undefined || limit <= 0) return null;
+  return limit - value;
+}
+
+export function selectVarFactorItems(snapshot: InvestmentRiskSnapshot): VarFactorItem[] {
+  return snapshot.varFactors.map((factor) => ({
+    id: factor.id,
+    label: factor.name,
+    value: factor.value,
+    previousMonthValue: factor.previousValue,
+    description: factor.description,
+  }));
 }
 
 export function memberDelta(member: Member, field: "scale" | "annualReturn" | "varValue") {
@@ -615,6 +660,7 @@ export function getSnapshotForSearch(search: string): { snapshot: InvestmentRisk
       assetAmounts: { fixedIncome: 0, equity: 0, alternative: 0, other: 0 },
       factorVar: { interestRate: null, equity: null, currency: null },
     }));
+    clone.varFactors = clone.varFactors.map((factor) => ({ ...factor, value: null, previousValue: null }));
   }
   if (resolved === "singlePoint") {
     clone.varTrend = [clone.varTrend.at(-1)!];

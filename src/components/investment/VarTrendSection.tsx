@@ -1,72 +1,68 @@
 import { useId, useMemo, useState } from "react";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { formatNumber, type VarTrendPoint, type VarTrendSeriesKey } from "../../data/investmentRisk";
 
-const seriesOptions: Array<{
-  key: VarTrendSeriesKey;
+type VarSeriesConfig = {
   tabLabel: string;
-  name: string;
-  legend: string;
-}> = [
-  { key: "group", tabLabel: "集团", name: "集团 VaR", legend: "集团 VaR（实际）" },
-  { key: "interestRate", tabLabel: "利率", name: "利率因子 VaR", legend: "利率因子 VaR" },
-  { key: "equity", tabLabel: "权益", name: "权益因子 VaR", legend: "权益因子 VaR" },
-  { key: "fx", tabLabel: "汇率", name: "汇率因子 VaR", legend: "汇率因子 VaR" },
-];
+  metricLabel: string;
+  showGroupLimit: boolean;
+  interpretationSuffix?: string;
+};
 
-const chartWidth = 320;
+const varSeriesConfig = {
+  group: { tabLabel: "集团", metricLabel: "集团 VaR", showGroupLimit: true },
+  interestRate: { tabLabel: "利率", metricLabel: "利率 VaR", showGroupLimit: false, interpretationSuffix: "仍是主要风险因子" },
+  equity: { tabLabel: "权益", metricLabel: "权益 VaR", showGroupLimit: false },
+  fx: { tabLabel: "汇率", metricLabel: "汇率 VaR", showGroupLimit: false, interpretationSuffix: "整体敞口较小" },
+} satisfies Record<VarTrendSeriesKey, VarSeriesConfig>;
+
+const seriesKeys = Object.keys(varSeriesConfig) as VarTrendSeriesKey[];
+
+const chartWidth = 328;
 const chartHeight = 260;
-const plotLeft = 34;
+const plotLeft = 42;
 const plotRight = 8;
-const plotTop = 25;
-const plotBottom = 218;
+const plotTop = 35;
+const plotBottom = 224;
 
-function readableCeiling(value: number) {
-  if (value <= 0) return 1;
-  const padded = value * 1.05;
-  const magnitude = 10 ** Math.floor(Math.log10(padded));
-  const normalized = padded / magnitude;
-  const step = [1, 1.2, 1.5, 2, 2.5, 5, 10].find((candidate) => candidate >= normalized) ?? 10;
-  return step * magnitude;
+function getNiceStep(maxValue: number) {
+  if (maxValue <= 10) return 2;
+  if (maxValue <= 50) return 10;
+  if (maxValue <= 100) return 20;
+  if (maxValue <= 300) return 50;
+  if (maxValue <= 600) return 100;
+  if (maxValue <= 1000) return 200;
+  return Math.ceil(maxValue / 5 / 100) * 100;
+}
+
+function createNiceAxis(rawMax: number) {
+  const step = getNiceStep(rawMax);
+  const roundedMax = Math.ceil(rawMax / step) * step;
+  const yMax = roundedMax <= rawMax ? roundedMax + step : roundedMax;
+  return {
+    step,
+    yMax,
+    ticks: Array.from({ length: Math.floor(yMax / step) + 1 }, (_, index) => index * step),
+  };
 }
 
 function narrativePeriod(period: string) {
   return period.replace(/(\d+)月/, "$1 月");
 }
 
-function buildLimitInsight(data: VarTrendPoint[]) {
-  const comparable = data.filter((point) => point.group !== null && point.groupLimit !== null);
-  const latest = comparable.at(-1);
-  if (!latest || latest.group === null || latest.groupLimit === null) {
-    return "集团 VaR 与限额的对比暂无可用数据。";
-  }
-
-  const usage = latest.groupLimit > 0 ? latest.group / latest.groupLimit * 100 : null;
-  const usageCopy = usage === null ? "" : `，限额使用率为 ${formatNumber(usage, 1)}%`;
-  if (latest.group < latest.groupLimit) {
-    const continuouslyBelow = comparable.length > 1 && comparable.every((point) => (point.group ?? 0) < (point.groupLimit ?? 0));
-    const periodCopy = continuouslyBelow ? `近 ${comparable.length} 个月集团 VaR 均` : `${narrativePeriod(latest.period)}集团 VaR `;
-    return `${periodCopy}低于 ${formatNumber(latest.groupLimit)} 亿元限额${usageCopy}。`;
-  }
-  if (latest.group > latest.groupLimit) {
-    return `${narrativePeriod(latest.period)}集团 VaR 高于 ${formatNumber(latest.groupLimit)} 亿元限额${usageCopy}。`;
-  }
-  return `${narrativePeriod(latest.period)}集团 VaR 处于 ${formatNumber(latest.groupLimit)} 亿元限额。`;
-}
-
-function buildSeriesInsight(data: VarTrendPoint[], series: VarTrendSeriesKey, seriesName: string) {
+function buildSeriesInsight(data: VarTrendPoint[], series: VarTrendSeriesKey, config: VarSeriesConfig) {
   const available = data.flatMap((point) => {
     const value = point[series];
     return value === null ? [] : [{ period: point.period, value }];
   });
 
   if (available.length === 0) {
-    return `当前暂无${seriesName}趋势数据，空值不按 0 展示。`;
+    return `当前暂无 ${config.metricLabel} 趋势数据，空值不按 0 展示。`;
   }
 
   const latest = available.at(-1)!;
   if (available.length === 1) {
-    return `${narrativePeriod(latest.period)}${seriesName}为 ${formatNumber(latest.value)} 亿元；当前仅有一期数据，暂不判断变化趋势。`;
+    return `${narrativePeriod(latest.period)}${config.metricLabel} 为 ${formatNumber(latest.value)} 亿元；当前仅有一期数据。`;
   }
 
   const previous = available.at(-2)!;
@@ -77,7 +73,24 @@ function buildSeriesInsight(data: VarTrendPoint[], series: VarTrendSeriesKey, se
     : delta > 0
       ? `较 ${narrativePeriod(previous.period)}上升 ${formatNumber(delta)} 亿元`
       : `与 ${narrativePeriod(previous.period)}持平`;
-  return `${narrativePeriod(latest.period)}${seriesName} ${movement} ${formatNumber(latest.value)} 亿元，${comparison}。`;
+  const suffix = config.interpretationSuffix ? `，${config.interpretationSuffix}` : "";
+
+  if (series !== "group") {
+    return `${narrativePeriod(latest.period)}${config.metricLabel} ${movement} ${formatNumber(latest.value)} 亿元，${comparison}${suffix}。`;
+  }
+
+  const latestPoint = [...data].reverse().find((point) => point.group !== null);
+  const limit = latestPoint?.groupLimit ?? null;
+  if (limit === null) {
+    return `${narrativePeriod(latest.period)}${config.metricLabel} ${movement} ${formatNumber(latest.value)} 亿元，${comparison}；集团 VaR 限额未配置。`;
+  }
+
+  const comparable = data.filter((point) => point.group !== null && point.groupLimit !== null);
+  const continuouslyBelow = comparable.length > 1 && comparable.every((point) => point.group! < point.groupLimit!);
+  const limitComparison = latest.value < limit
+    ? continuouslyBelow ? "持续低于集团限额" : "低于集团限额"
+    : latest.value > limit ? "高于集团限额" : "处于集团限额";
+  return `${narrativePeriod(latest.period)}${config.metricLabel} ${movement} ${formatNumber(latest.value)} 亿元，${comparison}，${limitComparison}。`;
 }
 
 export function VarTrendSection({
@@ -95,23 +108,30 @@ export function VarTrendSection({
   const panelId = `investment-var-trend-${id}`;
   const interpretationId = `investment-var-trend-ai-${id}`;
   const gradientId = `investment-var-bars-${id}`;
-  const selectedOption = seriesOptions.find((option) => option.key === selectedSeries) ?? seriesOptions[0];
+  const selectedConfig = varSeriesConfig[selectedSeries];
+  const showGroupLimit = selectedConfig.showGroupLimit;
+  const hasSeriesData = data.some((point) => point[selectedSeries] !== null);
+  const hasGroupLimitData = data.some((point) => point.groupLimit !== null);
 
   const chart = useMemo(() => {
-    const values = data.flatMap((point) => {
-      const selectedValue = point[selectedSeries];
-      return [selectedValue, point.groupLimit].filter((value): value is number => value !== null && value >= 0);
+    const selectedValues = data.flatMap((point) => {
+      const value = point[selectedSeries];
+      return value !== null && value >= 0 ? [value] : [];
     });
-    const maximum = readableCeiling(Math.max(...values, 1));
+    const groupLimitValues = showGroupLimit
+      ? data.flatMap((point) => point.groupLimit !== null && point.groupLimit >= 0 ? [point.groupLimit] : [])
+      : [];
+    const rawMax = Math.max(...selectedValues, ...groupLimitValues, 0);
+    const axis = createNiceAxis(rawMax);
     const plotWidth = chartWidth - plotLeft - plotRight;
     const plotHeight = plotBottom - plotTop;
     const step = plotWidth / Math.max(data.length, 1);
     const xFor = (index: number) => plotLeft + step * (index + 0.5);
-    const yFor = (value: number) => plotBottom - (value / maximum) * plotHeight;
+    const yFor = (value: number) => plotBottom - (value / axis.yMax) * plotHeight;
     let limitPath = "";
     let segmentOpen = false;
 
-    data.forEach((point, index) => {
+    if (showGroupLimit) data.forEach((point, index) => {
       if (point.groupLimit === null) {
         segmentOpen = false;
         return;
@@ -122,66 +142,77 @@ export function VarTrendSection({
     });
 
     return {
-      maximum,
+      ...axis,
       step,
       xFor,
       yFor,
       limitPath: limitPath.trim(),
-      ticks: [maximum, maximum / 2, 0],
     };
-  }, [data, selectedSeries]);
+  }, [data, selectedSeries, showGroupLimit]);
 
-  const insights = useMemo(
-    () => [buildSeriesInsight(data, selectedSeries, selectedOption.name), buildLimitInsight(data)],
-    [data, selectedOption.name, selectedSeries],
+  const insight = useMemo(
+    () => buildSeriesInsight(data, selectedSeries, selectedConfig),
+    [data, selectedConfig, selectedSeries],
   );
-  const ariaSummary = data.length === 0
-    ? `${selectedOption.name}暂无趋势数据`
-    : data.map((point) => `${point.period}${selectedOption.name}${point[selectedSeries] === null ? "无数据" : `${point[selectedSeries]}亿元`}，集团限额${point.groupLimit === null ? "无数据" : `${point.groupLimit}亿元`}`).join("；");
+  const ariaSummary = !hasSeriesData
+    ? `暂无近 6 个月${selectedConfig.metricLabel}数据`
+    : data.map((point) => {
+        const metric = `${point.period}${selectedConfig.metricLabel}${point[selectedSeries] === null ? "无数据" : `${point[selectedSeries]}亿元`}`;
+        if (!showGroupLimit) return metric;
+        return `${metric}，集团限额${point.groupLimit === null ? "未配置" : `${point.groupLimit}亿元`}`;
+      }).join("；");
+  const latestLimitPoint = [...data]
+    .map((point, index) => ({ point, index }))
+    .reverse()
+    .find(({ point }) => point.groupLimit !== null);
 
   return (
     <div className="investment-var-trend-stack">
       <div className="investment-surface-card investment-var-trend">
       <div className="investment-var-trend__tabs" role="tablist" aria-label="VaR 趋势指标">
-        {seriesOptions.map((option) => (
-          <button
-            key={option.key}
-            type="button"
-            role="tab"
-            aria-selected={selectedSeries === option.key}
-            aria-controls={panelId}
-            className={selectedSeries === option.key ? "is-active" : undefined}
-            onClick={() => setSelectedSeries(option.key)}
-          >
-            {option.tabLabel}
-          </button>
-        ))}
+        {seriesKeys.map((seriesKey) => {
+          const config = varSeriesConfig[seriesKey];
+          return (
+            <button
+              key={seriesKey}
+              type="button"
+              role="tab"
+              aria-selected={selectedSeries === seriesKey}
+              aria-controls={panelId}
+              className={selectedSeries === seriesKey ? "is-active" : undefined}
+              onClick={() => setSelectedSeries(seriesKey)}
+            >
+              {config.tabLabel}
+            </button>
+          );
+        })}
       </div>
 
       <div className="investment-var-trend__meta">
         <div className="investment-var-trend__legend" aria-label="图例">
-          <span><i className="investment-var-trend__bar-key" aria-hidden="true" />{selectedOption.legend}</span>
-          <span><i className="investment-var-trend__limit-key" aria-hidden="true"><b /></i>集团 VaR 限额</span>
+          <span><i className="investment-var-trend__bar-key" aria-hidden="true" />{selectedConfig.metricLabel}</span>
+          {showGroupLimit && hasGroupLimitData ? <span><i className="investment-var-trend__limit-key" aria-hidden="true"><b /></i>集团 VaR 限额</span> : null}
         </div>
-        <span className="investment-var-trend__unit">单位：亿元</span>
       </div>
 
       <div id={panelId} className="investment-var-trend__panel" role="tabpanel">
-        {data.length === 0 ? (
+        {!hasSeriesData ? (
           <div className="investment-var-trend__empty">
-            <strong>暂无趋势数据</strong>
-            <span>当前期间暂无可用 VaR 数据</span>
+            <strong>暂无近 6 个月 VaR 数据</strong>
+            <span>当前指标没有可用于绘图的复核值</span>
           </div>
         ) : (
-          <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label={ariaSummary}>
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#ff9b45" />
-                <stop offset="1" stopColor="#ff6a00" />
-              </linearGradient>
-            </defs>
+          <>
+            <span className="investment-var-trend__unit">单位：亿元</span>
+            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label={ariaSummary}>
+              <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#ff9b45" />
+                  <stop offset="1" stopColor="#ff6a00" />
+                </linearGradient>
+              </defs>
 
-            {chart.ticks.map((tick) => {
+            {[...chart.ticks].reverse().map((tick) => {
               const y = chart.yFor(tick);
               return (
                 <g key={tick}>
@@ -191,12 +222,13 @@ export function VarTrendSection({
               );
             })}
 
-            {data.map((point, index) => {
+              <g key={selectedSeries} className="investment-var-trend__series">
+              {data.map((point, index) => {
               const value = point[selectedSeries];
               const x = chart.xFor(index);
               const barWidth = Math.min(27, chart.step * 0.52);
               const scaledHeight = value === null ? 0 : plotBottom - chart.yFor(Math.max(0, value));
-              const barHeight = value === null ? 0 : value === 0 ? 2 : Math.max(5, scaledHeight);
+              const barHeight = value === null || value === 0 ? 0 : Math.max(3, scaledHeight);
               const barY = plotBottom - barHeight;
 
               return (
@@ -205,19 +237,21 @@ export function VarTrendSection({
                     <text className="investment-var-trend__value" x={x} y={plotBottom - 7} textAnchor="middle">—</text>
                   ) : (
                     <>
-                      <rect className="investment-var-trend__bar" x={x - barWidth / 2} y={barY} width={barWidth} height={barHeight} rx="3" fill={`url(#${gradientId})`}>
-                        <title>{point.period} {selectedOption.name} {formatNumber(value)} 亿元</title>
-                      </rect>
-                      <text className="investment-var-trend__value" x={x} y={Math.max(plotTop + 9, barY - 7)} textAnchor="middle">{formatNumber(value)}</text>
+                      {value > 0 ? (
+                        <rect className="investment-var-trend__bar" x={x - barWidth / 2} y={barY} width={barWidth} height={barHeight} rx="3" fill={`url(#${gradientId})`}>
+                          <title>{point.period} {selectedConfig.metricLabel} {formatNumber(value)} 亿元</title>
+                        </rect>
+                      ) : null}
+                      <text className="investment-var-trend__value" x={x} y={value === 0 ? plotBottom - 7 : Math.max(plotTop + 9, barY - 7)} textAnchor="middle">{formatNumber(value)}</text>
                     </>
                   )}
-                  <text className="investment-var-trend__period" x={x} y={244} textAnchor="middle">{point.period}</text>
+                  <text className="investment-var-trend__period" x={x} y={248} textAnchor="middle">{point.period}</text>
                 </g>
               );
-            })}
+              })}
 
-            {chart.limitPath ? <path className="investment-var-trend__limit-line" d={chart.limitPath} /> : null}
-            {data.map((point, index) => point.groupLimit === null ? null : (
+            {showGroupLimit && chart.limitPath ? <path className="investment-var-trend__limit-line" d={chart.limitPath} /> : null}
+            {showGroupLimit ? data.map((point, index) => point.groupLimit === null ? null : (
               <circle
                 key={`limit-${point.period}`}
                 className="investment-var-trend__limit-dot"
@@ -227,21 +261,23 @@ export function VarTrendSection({
               >
                 <title>{point.period} 集团 VaR 限额 {formatNumber(point.groupLimit)} 亿元</title>
               </circle>
-            ))}
-            {data.at(-1)?.groupLimit !== null && data.at(-1)?.groupLimit !== undefined ? (
+            )) : null}
+            {showGroupLimit && latestLimitPoint?.point.groupLimit !== null && latestLimitPoint?.point.groupLimit !== undefined ? (
               <text
                 className="investment-var-trend__limit-value"
-                x={chart.xFor(data.length - 1) - 8}
-                y={Math.max(plotTop + 8, chart.yFor(data.at(-1)!.groupLimit!) - 8)}
+                x={chart.xFor(latestLimitPoint.index) - 8}
+                y={Math.max(plotTop + 8, chart.yFor(latestLimitPoint.point.groupLimit) - 8)}
                 textAnchor="end"
               >
-                {formatNumber(data.at(-1)!.groupLimit!)}
+                {formatNumber(latestLimitPoint.point.groupLimit)}
               </text>
             ) : null}
-          </svg>
+              </g>
+            </svg>
+          </>
         )}
-        {data.length === 1 ? <p className="investment-var-trend__data-note">当前仅有一期数据</p> : null}
-        {data.length > 0 && data.every((point) => point[selectedSeries] === null) ? <p className="investment-var-trend__data-note">当前指标暂无趋势值，集团限额仍保留展示</p> : null}
+        {hasSeriesData && data.filter((point) => point[selectedSeries] !== null).length === 1 ? <p className="investment-var-trend__data-note">当前仅有一期数据</p> : null}
+        {hasSeriesData && showGroupLimit && !hasGroupLimitData ? <p className="investment-var-trend__data-note">集团 VaR 限额未配置</p> : null}
       </div>
 
       </div>
@@ -255,14 +291,13 @@ export function VarTrendSection({
           onClick={() => setIsInterpretationOpen((current) => !current)}
         >
           <span className="investment-var-trend-ai__title">
-            <i aria-hidden="true"><Sparkles size={16} /></i>
-            <strong id={`${interpretationId}-title`}>趋势解读（AI）</strong>
+            <strong id={`${interpretationId}-title`}>趋势解读</strong>
           </span>
           <ChevronDown className={isInterpretationOpen ? "is-open" : undefined} size={18} aria-hidden="true" />
         </button>
         <div id={interpretationId} className="investment-var-trend-ai__body" hidden={!isInterpretationOpen}>
           <ul>
-            {insights.map((insight) => <li key={insight}>{insight}</li>)}
+            <li>{insight}</li>
           </ul>
           <div className="investment-var-trend-ai__footer">
             <span>数据截至：{periodLabel ?? data.at(-1)?.period ?? "当前期间"}</span>

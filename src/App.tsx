@@ -3,6 +3,15 @@ import { Navigate, Route, Routes, useLocation, useNavigationType } from "react-r
 import { AppShell } from "./components/AppShell";
 import { GlobalCopilotProvider } from "./components/GlobalCopilot";
 import {
+  WorkbenchLayout,
+  WorkbenchMatterDetailPage,
+  WorkbenchOverviewPage,
+  WorkbenchProvider,
+  WorkbenchQueuePage,
+  WorkbenchReportsPage,
+  WorkbenchTrackingPage,
+} from "./features/workbench";
+import {
   DefaultAssetsPage,
   DefaultCustomerListPage,
   WarningAssetDetailPage,
@@ -29,14 +38,15 @@ import { LargeExposureDetailPage, LargeExposureListPage } from "./pages/LargeExp
 import { MacroRiskPage } from "./pages/MacroRiskPage";
 import { ReportPage } from "./pages/ReportPage";
 import { ClientRiskPanoramaPage, IndustryRiskAnalysisPage, MarketShockAnalysisPage } from "./pages/RiskAnalysisPages";
-import { AlertTimelinePage, TodayFocusPage, TrackingListPage, WatchPage } from "./pages/WatchPage";
+import { AlertTimelinePage } from "./pages/WatchPage";
 
 export default function App() {
   return (
     <AppShell>
       <GlobalCopilotProvider>
-        <ScrollToTop />
-        <Routes>
+        <WorkbenchProvider>
+          <ScrollToTop />
+          <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/brief" element={<BriefDetailPage />} />
           <Route path="/macro" element={<MacroRiskPage />} />
@@ -63,11 +73,16 @@ export default function App() {
           <Route path="/investment/structure" element={<InvestmentStructurePage />} />
           <Route path="/investment/member/:memberId" element={<InvestmentMemberPage />} />
           <Route path="/investment/asset/:assetClassId" element={<InvestmentAssetPage />} />
-          <Route path="/watch" element={<WatchPage />} />
+          <Route path="/watch" element={<WorkbenchLayout />}>
+            <Route index element={<WorkbenchOverviewPage />} />
+            <Route path="queue" element={<WorkbenchQueuePage />} />
+            <Route path="tracking" element={<WorkbenchTrackingPage />} />
+            <Route path="reports" element={<WorkbenchReportsPage />} />
+            <Route path="matter/:matterId" element={<WorkbenchMatterDetailPage />} />
+          </Route>
           <Route path="/watch/alerts" element={<AlertTimelinePage />} />
           <Route path="/risk/ai-alerts" element={<AlertTimelinePage />} />
-          <Route path="/watch/today" element={<TodayFocusPage />} />
-          <Route path="/watch/tracking" element={<TrackingListPage />} />
+          <Route path="/watch/today" element={<Navigate to="/watch/queue" replace />} />
           <Route path="/watch/tracking/guangxi-baise-default" element={<WarningTrackingDetailPage />} />
           <Route path="/watch/tracking/:trackingId" element={<InvestmentTrackingDetailPage />} />
           <Route path="/report" element={<ReportPage />} />
@@ -75,7 +90,8 @@ export default function App() {
           <Route path="/risk/client/:id" element={<ClientRiskPanoramaPage />} />
           <Route path="/risk/industry/:type" element={<IndustryRiskAnalysisPage />} />
           <Route path="/risk/market/shock" element={<MarketShockAnalysisPage />} />
-        </Routes>
+          </Routes>
+        </WorkbenchProvider>
       </GlobalCopilotProvider>
     </AppShell>
   );

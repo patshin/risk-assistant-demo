@@ -291,20 +291,6 @@ export function LineChart({ data, unit = "" }: { data: Array<{ label: string; va
   );
 }
 
-export function VarGauge({ value, limit }: { value: number | null; limit: number | null }) {
-  const usage = value !== null && limit !== null && limit > 0 ? (value / limit) * 100 : null;
-  const safeUsage = usage ?? 0;
-  const degrees = Math.max(0, Math.min(100, safeUsage)) * 1.8;
-  return (
-    <div className="investment-gauge" role="img" aria-label={usage === null ? "VaR 限额使用率暂无复核数据" : `VaR ${value} 亿元，限额使用率 ${usage.toFixed(1)}%`}>
-      <div className="investment-gauge__arc" style={{ background: `conic-gradient(from 270deg, #ff6a00 0deg ${degrees}deg, #f4e8d9 ${degrees}deg 180deg, transparent 180deg)` }}>
-        <div className="investment-gauge__inner" />
-      </div>
-      <div className="investment-gauge__value"><strong>{usage === null ? "—" : `${usage.toFixed(1)}%`}</strong><span>{usage === null ? "暂无复核数据" : usage > 100 ? "已超过限额" : "限额使用率"}</span></div>
-    </div>
-  );
-}
-
 export function HorizontalBars({
   rows,
   unit = "亿元",

@@ -45,10 +45,20 @@ export type InvestmentSourceContext = {
   metricIds?: string[];
 };
 
+export type WorkbenchCopilotAction = "assign" | "material" | "queue" | "reports";
+
+export type WorkbenchSourceContext = {
+  page: "overview" | "queue" | "tracking" | "reports" | "matter";
+  matterId?: "huadong" | "baise" | "cii" | "changning";
+  label?: string;
+};
+
 export type OpenCopilotOptions = {
   intent?: CopilotIntent;
   context?: string;
   sourceContext?: InvestmentSourceContext;
+  workbenchContext?: WorkbenchSourceContext;
+  onWorkbenchAction?: (action: WorkbenchCopilotAction) => void;
 };
 
 type CopilotContextValue = {
@@ -61,8 +71,10 @@ type CopilotState = {
   intent: CopilotIntent;
   context?: string;
   sourceContext?: InvestmentSourceContext;
+  workbenchContext?: WorkbenchSourceContext;
+  onWorkbenchAction?: (action: WorkbenchCopilotAction) => void;
   fullScreen: boolean;
-  responseState: "loading" | "completed" | "error";
+  responseState: "idle" | "loading" | "completed" | "error";
   followUpCount: number;
   notice?: string;
 };
@@ -117,8 +129,10 @@ export function GlobalCopilotProvider({ children }: { children: ReactNode }) {
           intent: options?.intent ?? "general",
           context: options?.context,
           sourceContext: options?.sourceContext,
+          workbenchContext: options?.workbenchContext,
+          onWorkbenchAction: options?.onWorkbenchAction,
           fullScreen: false,
-          responseState: "loading",
+          responseState: options?.workbenchContext ? "idle" : "loading",
           followUpCount: 0,
         });
       },
@@ -173,7 +187,7 @@ export function GlobalCopilotProvider({ children }: { children: ReactNode }) {
   const matchedContext = Object.entries(routeContext).sort(([a], [b]) => b.length - a.length).find(([route]) => location.pathname === route || location.pathname.startsWith(`${route}/`))?.[1];
   const resolvedContext = state.context ?? (state.sourceContext?.page === "performance"
     ? `正在分析“${getCiiViewData(investmentRiskSnapshot, state.sourceContext.view ?? "group").label}收益表现与集团差异”`
-    : state.sourceContext ? "正在分析“投资风险事实、边界与后续动作”" : state.intent === "general" ? matchedContext : intentContext[state.intent]) ?? intentContext.general;
+    : state.sourceContext ? "正在分析“投资风险事实、边界与后续动作”" : state.workbenchContext ? "个人工作台 · 今日责任队列" : state.intent === "general" ? matchedContext : intentContext[state.intent]) ?? intentContext.general;
 
   return (
     <CopilotContext.Provider value={value}>
@@ -279,11 +293,18 @@ function CopilotSheet({
     navigate("/investment/member/pension", { state: { returnTo: source.route } });
   };
 
+  const runWorkbenchAction = (action: WorkbenchCopilotAction) => {
+    const callback = state.onWorkbenchAction;
+    onClose();
+    callback?.(action);
+  };
+
   const investmentAnswer = state.sourceContext ? getInvestmentAnswer(state.sourceContext, state.followUpCount) : null;
-  const genericAnswer = !investmentAnswer ? getGenericAnswer(state.intent) : null;
+  const workbenchAnswer = state.workbenchContext ? getWorkbenchAnswer(state.workbenchContext, state.followUpCount) : null;
+  const genericAnswer = !investmentAnswer && !workbenchAnswer ? getGenericAnswer(state.intent) : null;
 
   return (
-    <div className={`copilot-layer${state.fullScreen ? " is-fullscreen" : ""}${state.sourceContext ? " is-investment" : ""}${state.intent === "warningFacts" ? " is-warning-facts" : ""}`} role="presentation">
+    <div className={`copilot-layer${state.fullScreen ? " is-fullscreen" : ""}${state.sourceContext ? " is-investment" : ""}${state.workbenchContext ? " is-workbench" : ""}${state.intent === "warningFacts" ? " is-warning-facts" : ""}`} role="presentation">
       <button className="copilot-layer__backdrop" type="button" aria-label="关闭 AI 风控助手" onClick={onClose} />
       <section ref={panelRef} className="copilot-panel" role="dialog" aria-modal="true" aria-label="AI 风控助手" aria-busy={state.responseState === "loading"}>
         <header className="copilot-header">
@@ -296,8 +317,10 @@ function CopilotSheet({
         </header>
 
         <div className="copilot-body">
-          {state.responseState === "loading" ? (
-            <div className="copilot-loading" role="status"><LoaderCircle size={26} /><strong>{state.sourceContext ? "正在核对投资快照与证据…" : "正在分析当前页面信息…"}</strong><span>{state.sourceContext ? "数据范围、时间和口径将随结论一并给出" : "结论与支持证据将一并给出"}</span></div>
+          {state.responseState === "idle" && state.workbenchContext ? (
+            <WorkbenchCopilotIntro context={state.workbenchContext} onAsk={() => onState((current) => ({ ...current, responseState: "loading" }))} />
+          ) : state.responseState === "loading" ? (
+            <div className="copilot-loading" role="status"><LoaderCircle size={26} /><strong>{state.sourceContext ? "正在核对投资快照与证据…" : state.workbenchContext ? "正在核对事项、证据与责任状态…" : "正在分析当前页面信息…"}</strong><span>{state.sourceContext || state.workbenchContext ? "数据范围、时间和口径将随结论一并给出" : "结论与支持证据将一并给出"}</span></div>
           ) : state.responseState === "error" ? (
             <div className="copilot-error" role="alert"><CircleAlert size={28} /><strong>本次分析未完成</strong><span>没有生成未经核验的结论，请重试。</span><button type="button" onClick={() => onState((current) => ({ ...current, responseState: "loading" }))}><RefreshCw size={16} />重新分析</button></div>
           ) : state.intent === "warningFacts" ? (
@@ -324,6 +347,21 @@ function CopilotSheet({
                 {state.notice ? <button className="investment-copilot-notice" type="button" aria-live="polite" onClick={() => { const change = getChange(state.sourceContext?.changeId, investmentRiskSnapshot); onClose(); navigate(`/watch/tracking/tracking-${change.id}`); }}>{state.notice}<ChevronRight size={16} /></button> : null}
               </section>
             </>
+          ) : workbenchAnswer ? (
+            <>
+              <section className="copilot-user-bubble">{workbenchAnswer.prompt}</section>
+              <section className="copilot-answer copilot-workbench-answer">
+                <div className="copilot-answer__lead"><span>AI</span><p>以下内容基于当前工作台事实与责任状态：</p></div>
+                <CopilotBlock title="结论摘要"><p>{workbenchAnswer.summary}</p></CopilotBlock>
+                <CopilotBlock title="关键证据"><div className="copilot-evidence-list">{workbenchAnswer.evidence.map((item) => <div key={item.text}><span>{item.text}</span><em>{item.source}</em></div>)}</div></CopilotBlock>
+                <CopilotBlock title="信息缺口与边界"><div className="copilot-workbench-gaps"><div><CircleAlert size={16} /><span><strong>{workbenchAnswer.gap.title}</strong><p>{workbenchAnswer.gap.detail}</p></span></div></div></CopilotBlock>
+                <CopilotBlock title="可执行动作">
+                  <div className="copilot-recommendations">
+                    {workbenchAnswer.actions.map((item) => <button key={item.action} type="button" onClick={() => runWorkbenchAction(item.action)}><item.icon size={16} /><span>{item.label}</span><ChevronRight size={15} /></button>)}
+                  </div>
+                </CopilotBlock>
+              </section>
+            </>
           ) : genericAnswer ? (
             <>
               <section className="copilot-user-bubble">{genericAnswer.prompt}</section>
@@ -340,7 +378,7 @@ function CopilotSheet({
         </div>
 
         <footer className="copilot-input">
-          <button type="button" disabled={state.responseState !== "completed"} onClick={() => onState((current) => ({ ...current, responseState: "loading", followUpCount: current.followUpCount + 1, notice: undefined }))}>{state.followUpCount ? "继续核对影响范围…" : "继续追问…"}</button>
+          <button type="button" disabled={state.responseState === "loading" || state.responseState === "error"} onClick={() => onState((current) => ({ ...current, responseState: "loading", followUpCount: current.responseState === "idle" ? current.followUpCount : current.followUpCount + 1, notice: undefined }))}>{state.responseState === "idle" ? "输入你的问题…" : state.followUpCount ? "继续核对影响范围…" : "继续追问…"}</button>
           <Send size={18} />
         </footer>
       </section>
@@ -350,6 +388,23 @@ function CopilotSheet({
 
 function CopilotBlock({ title, children }: { title: string; children: ReactNode }) {
   return <section className="copilot-block"><h3>{title}</h3>{children}</section>;
+}
+
+function WorkbenchCopilotIntro({ context, onAsk }: { context: WorkbenchSourceContext; onAsk: () => void }) {
+  const subject = context.label ?? (context.page === "overview" ? "今日责任队列" : context.page === "queue" ? "待处理事项" : context.page === "tracking" ? "重点跟踪" : context.page === "reports" ? "本周汇报准备" : "当前事项");
+  const prompts = context.matterId === "huadong"
+    ? ["为什么这项风险现在升级？", "哪些是事实，哪些是 AI 推断？", "还缺什么证据才能做决定？", "帮我形成下一步核验任务"]
+    : context.matterId === "baise"
+      ? ["已确认的出险事实是什么？", "为什么现在还不能判断风险缓释？", "缺失进展会影响哪些汇报？", "帮我更新责任动作"]
+      : context.matterId === "cii"
+        ? ["收益转负是否意味着风险失控？", "收益和 VaR 的口径边界是什么？", "这项变化是否值得纳入周报？", "帮我整理汇报表述"]
+        : ["今天最需要我推动什么？", "哪些事项已超期或缺材料？", "本周汇报还有哪些人工确认？", "帮我形成可分派的行动清单"];
+  return (
+    <section className="copilot-workbench-intro">
+      <div className="copilot-workbench-intro__note"><span>AI</span><div><strong>正在查看：{subject}</strong><p>我会区分源系统事实、规则结果、AI 推断与人工确认，并说明数据时间和信息缺口。</p></div></div>
+      <div className="copilot-workbench-prompts">{prompts.map((prompt) => <button key={prompt} type="button" onClick={onAsk}><span>{prompt}</span><ArrowRight size={15} /></button>)}</div>
+    </section>
+  );
 }
 
 function WarningFactsAnswer({ followUpCount }: { followUpCount: number }) {
@@ -412,6 +467,79 @@ function getInvestmentAnswer(source: InvestmentSourceContext, followUpCount: num
       : "CII 月度综合投资收益率为 -2.47%，是本期首要关注变化；集团 VaR 为 426 亿元、限额使用率 53.3%，整体仍在限额内。",
     evidence,
     boundary: "收益只覆盖四家险资 CII 口径，VaR 覆盖 VaR 计量资产；单月收益不足以判断趋势反转，成员 VaR 无独立限额。AI 输出需由人确认，且不构成投资、买卖或调仓建议。",
+  };
+}
+
+function getWorkbenchAnswer(source: WorkbenchSourceContext, followUpCount: number) {
+  if (source.matterId === "huadong") return {
+    prompt: followUpCount ? "请继续核对华东建设集团的影响边界和责任动作" : "请解释华东建设集团为什么升级，并给出可执行动作",
+    summary: followUpCount ? "补充核对后，管理动作仍应聚焦主体关系与跨模块敞口核验；在关系确认前，不应把疑似投资持仓计入确定敞口。" : "华东建设集团集中度限额占用率升至 128%，且司法执行信号同步增加，已满足升级条件；跨模块影响仍需核验主体关系。",
+    evidence: [
+      { text: "集中度限额占用率 128%，较上期上升 7 个百分点", source: "集中度监测系统 · 09:20" },
+      { text: "新增 2 条司法执行记录", source: "司法公开信息 · 09:18" },
+      { text: "疑似投资持仓 3.8 亿元", source: "投资风险快照 · 主体关系待核验" },
+    ],
+    gap: { title: "主体关系与现金流材料尚未齐备", detail: "“可能形成跨模块集中风险”属于 AI 推断，需由专业人员核验后再确认影响范围。" },
+    actions: [
+      { action: "assign" as const, label: "分派主体关系核验任务", icon: Target },
+      { action: "material" as const, label: "发起缺失材料补充", icon: FileText },
+      { action: "reports" as const, label: "查看汇报准备状态", icon: ChevronRight },
+    ],
+  };
+  if (source.matterId === "baise") return {
+    prompt: followUpCount ? "请继续核对广西百色事项的处置进展和判断边界" : "请梳理广西百色出险事实、进展缺口和下一步动作",
+    summary: "0.47 亿元出险资产事实已经确认，但最新回收和担保处置进展未按时更新，因此目前不能判断风险是否缓释。",
+    evidence: [
+      { text: "出险金额 0.47 亿元，本息形成实质逾期", source: "信用风险系统 · 08:45" },
+      { text: "进展应于 09:00 更新，当前已超期", source: "重点跟踪任务 · 责任人李敏" },
+    ],
+    gap: { title: "缺少最新回收与担保处置进展", detail: "在责任人补充材料并作出人工判断前，AI 不推断风险已缓释。" },
+    actions: [
+      { action: "material" as const, label: "发起处置进展补充", icon: FileText },
+      { action: "queue" as const, label: "返回待处理队列", icon: Target },
+      { action: "reports" as const, label: "检查汇报材料缺口", icon: ChevronRight },
+    ],
+  };
+  if (source.matterId === "cii") return {
+    prompt: followUpCount ? "请继续核对 CII 收益变化的汇报边界" : "请解释 CII 收益转负是否意味着投资风险失控",
+    summary: "CII 月度综合投资收益率为 -2.47%，较上期下降 70bp，属于需要关注的变化；集团 VaR 为 426 亿元、限额使用率 53.3%，未突破风险限额。",
+    evidence: [
+      { text: "月度综合投资收益率 -2.47%，较上期下降 70bp", source: "投资风险快照 · 09:32" },
+      { text: "集团 VaR 426 亿元，限额使用率 53.3%", source: "市场风险计量系统 · 09:30" },
+    ],
+    gap: { title: "单月收益不足以判断趋势反转", detail: "收益与 VaR 覆盖范围不同；本回答不构成投资、买卖、调仓或配置建议。" },
+    actions: [
+      { action: "reports" as const, label: "进入汇报准备", icon: FileText },
+      { action: "queue" as const, label: "查看待确认事项", icon: Target },
+    ],
+  };
+  if (source.matterId === "changning") return {
+    prompt: "请梳理常宁市尚宇高级中学的已知事实和信息缺口",
+    summary: "当前只可确认该客户已进入重大预警状态，尚没有足够证据解释预警原因或判断风险影响。",
+    evidence: [
+      { text: "客户身份与重大预警状态已确认", source: "信用风险系统 · 08:40" },
+      { text: "原因明细和现金流材料尚未同步", source: "责任单位 · 待提交" },
+    ],
+    gap: { title: "原因与现金流证据缺失", detail: "AI 不会根据预警标签自行补全原因；补齐证据后需由专业人员形成判断。" },
+    actions: [
+      { action: "material" as const, label: "发起材料补充请求", icon: FileText },
+      { action: "assign" as const, label: "分派专业核验任务", icon: Target },
+    ],
+  };
+  return {
+    prompt: followUpCount ? "请继续核对今天事项的责任、期限和信息缺口" : "请告诉我今天最需要推动什么",
+    summary: "今天应先确认华东建设集团管理策略，再补充广西百色出险处置进展；CII 是否纳入周报也需要人工确认。",
+    evidence: [
+      { text: "华东建设集团集中度占用率升至 128%，需今日决策", source: "跨模块风险 · 09:25" },
+      { text: "广西百色 0.47 亿元出险事项进展已超期", source: "信用风险 · 08:50" },
+      { text: "CII 月度收益率 -2.47%，VaR 仍在限额内", source: "投资风险 · 09:32" },
+    ],
+    gap: { title: "2 项信息或人工确认仍未完成", detail: "工作台排序来自严重度、时限与责任规则；AI 只做解释和行动准备。" },
+    actions: [
+      { action: "queue" as const, label: "进入今日待处理队列", icon: Target },
+      { action: "assign" as const, label: "分派华东建设核验任务", icon: UserRoundSearch },
+      { action: "reports" as const, label: "检查本周汇报准备", icon: FileText },
+    ],
   };
 }
 
