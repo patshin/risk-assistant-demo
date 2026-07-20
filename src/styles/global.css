@@ -6350,6 +6350,7 @@ button {
 }
 
 .credit-page {
+  padding-top: 8px;
   padding-bottom: calc(108px + var(--safe-bottom));
 }
 
@@ -7215,22 +7216,39 @@ button {
 }
 
 .credit-detail {
-  gap: 15px;
+  gap: 14px;
+}
+
+.credit-detail .page-header {
+  margin-bottom: -10px;
 }
 
 .credit-detail .tab-bar {
-  margin-bottom: 4px;
-  border: 0;
-  background: transparent;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  min-height: 48px;
+  margin: -4px 2px 0;
   padding: 0;
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid rgba(243, 227, 209, 0.76);
+  border-radius: 0;
+  background: transparent;
 }
 
 .credit-detail .tab-bar button {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
-  padding: 12px 5px;
+  min-height: 46px;
+  padding: 0;
   border-radius: 0;
+  color: #655b53;
   font-size: 14px;
+  font-weight: 750;
   background: transparent;
 }
 
@@ -7240,15 +7258,15 @@ button {
 
 .credit-detail .tab-bar button.is-active {
   color: var(--color-orange);
-  background: rgba(255, 232, 210, 0.54);
+  background: transparent;
   box-shadow: none;
 }
 
 .credit-detail .tab-bar button.is-active::after {
   position: absolute;
-  right: 35%;
-  bottom: 3px;
-  left: 35%;
+  right: 26%;
+  bottom: -1px;
+  left: 26%;
   height: 3px;
   border-radius: 999px;
   background: var(--color-orange);
